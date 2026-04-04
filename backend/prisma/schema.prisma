@@ -1,0 +1,97 @@
+generator client { 
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// 1. User Model (Handles Admin, Teacher, Student RBAC)
+enum Role {
+    ADMIN 
+    TEACHER 
+    STUDENT 
+}
+
+model User {
+    id        String   @id @default(uuid()) // Can be mapped to Clerk User ID
+  email     String   @unique
+  name      String
+  role      Role     @default(STUDENT)
+
+  // Relations
+  examsCreated Exam[]   @relation("TeacherExams")
+  results      Result[]
+  createdAt    DateTime @default(now())
+}
+
+// 2. Exam Model (Managed by Teachers)
+model Exam {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  duration    Int        // Duration in minutes [2]
+  totalMarks  Int        // Custom marks [2]
+  teacherId   String
+  teacher     User       @relation("TeacherExams", fields: [teacherId], references: [id])
+  
+  // Relations
+  questions   Question[]
+  results     Result[]
+  createdAt   DateTime   @default(now())
+}
+
+// 3. Question Model (Supports both MCQ and Coding)
+enum QuestionType {
+  MCQ
+  CODING
+}
+
+model Question {
+  id            String       @id @default(uuid())
+  examId        String
+  exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  type          QuestionType // Identifies if it's MCQ or Coding [2]
+  text          String       // The actual question or problem statement
+  marks         Int
+  
+  // Relations (Only one of these will be populated based on QuestionType)
+  mcqOptions    McqOption[]
+  testCases     TestCase[]
+}
+
+// 4. MCQ Options (For Multiple Choice Questions)
+model McqOption {
+  id          String   @id @default(uuid())
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text        String
+  isCorrect   Boolean  @default(false)
+}
+
+// 5. Test Cases (For Coding Challenges)
+model TestCase {
+  id             String   @id @default(uuid())
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  input          String   // e.g., "2 3"
+  expectedOutput String   // e.g., "5"
+}
+
+// 6. Results & Analytics Model (Generated after student submission)
+model Result {
+  id             String   @id @default(uuid())
+  studentId      String
+  student        User     @relation(fields: [studentId], references: [id])
+  examId         String
+  exam           Exam     @relation(fields: [examId], references: [id])
+  
+  score          Int
+  status         String   // e.g., "Pass" or "Fail" [3]
+  tabSwitches    Int      @default(0) // Tracks how many times they switched tabs [4]
+  performanceLog Json?    // Stores detailed performance report data [3]
+  
+  submittedAt    DateTime @default(now())
+}
