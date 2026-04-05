@@ -13,11 +13,13 @@
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
     "@prisma/client": "^7.6.0",
+    "dotenv": "^17.4.0",
     "express": "^5.2.1",
     "nodemon": "^3.1.14",
-    "prisma": "^7.6.0"
+    "prisma": "7.6.0"
   },
   "devDependencies": {
+    "@prisma/config": "^7.6.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.2",
     "tsx": "^4.21.0",
