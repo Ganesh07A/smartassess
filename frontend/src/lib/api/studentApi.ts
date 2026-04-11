@@ -6,8 +6,12 @@ export interface StudentExam extends Exam {
     id: string;
     status: 'IN_PROGRESS' | 'SUBMITTED' | 'GRADED';
     totalScore: number;
+    percentage: number;
     passed: boolean;
+    tabSwitches: number;
+    answers?: any;
   } | null;
+
 }
 
 export interface ExamAttempt extends Exam {

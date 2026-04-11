@@ -42,8 +42,11 @@ export default function EditExamPage() {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
+    // @ts-ignore - mismatch between zod coercion and react-hook-form resolver types
     resolver: zodResolver(schema),
   });
+
+
 
   const fetchData = async () => {
     try {

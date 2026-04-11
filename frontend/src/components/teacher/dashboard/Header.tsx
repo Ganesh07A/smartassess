@@ -1,5 +1,5 @@
-'use client';
-import { Search, Bell, ChevronDown, User, Menu } from 'lucide-react';
+import { Search, Bell, Menu } from 'lucide-react';
+import { UserButton } from '@clerk/nextjs';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -39,19 +39,21 @@ export function Header({ onMenuClick }: HeaderProps) {
           <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
         </button>
 
-        <div className="h-10 w-[1px] bg-gray-200 hidden sm:block" />
+        <div className="h-10 w-[1px] bg-gray-200" />
 
-        <div className="flex items-center gap-3 cursor-pointer group p-1 sm:pl-3 rounded-2xl hover:bg-gray-50 transition-all">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Sarah Jenkins</p>
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Senior Instructor</p>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200 overflow-hidden">
-            <User className="w-6 h-6" />
-          </div>
-          <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-y-0.5 transition-all hidden sm:block" />
+        <div className="flex items-center gap-3">
+          <UserButton 
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "w-10 h-10 rounded-2xl shadow-lg shadow-blue-100",
+                userButtonTrigger: "focus:shadow-none hover:opacity-80 transition-all"
+              }
+            }} 
+          />
         </div>
       </div>
     </header>
   );
 }
+

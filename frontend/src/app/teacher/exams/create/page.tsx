@@ -30,9 +30,11 @@ export default function CreateExamPage() {
   const [activeTab, setActiveTab] = useState('DETAILS');
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
+    // @ts-ignore - mismatch between zod coercion and react-hook-form resolver types
     resolver: zodResolver(schema),
     defaultValues: { duration: 60, totalMarks: 100, passPercent: 40 },
   });
+
 
   const title       = watch('title') || 'New Exam';
   const duration    = watch('duration') || 60;

@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { 
   Trophy, ChevronLeft, Target, 
   BarChart3, CheckCircle, XCircle,
-  FileText, Clock, AlertTriangle
+  FileText, Clock, AlertTriangle, Shield
 } from 'lucide-react';
+
 import { Sidebar } from '@/components/teacher/dashboard/Sidebar';
 import { Header } from '@/components/teacher/dashboard/Header';
 import { studentApi, StudentExam } from '@/lib/api/studentApi';

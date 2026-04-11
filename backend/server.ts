@@ -10,7 +10,11 @@ import studentRoutes from './src/routes/student';
 const app = express();
 
 
-app.use(clerkMiddleware());
+app.use(clerkMiddleware({
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  secretKey: process.env.CLERK_SECRET_KEY,
+}));
+
 app.use(securityMiddleware);
 app.use(express.json({ limit: '10mb' }));
 
