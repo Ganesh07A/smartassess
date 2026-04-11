@@ -41,5 +41,12 @@ export const createExam  = async (req: Request, res: Response) => {
                 }   
             }
         })
+        //pushing data to db
+        
+
+        return res.status(201).json("Exam created successfully!")
     }
-}
+    catch(err) {
+        return res.status(500).json("Internal server error!")
+    }
+}   

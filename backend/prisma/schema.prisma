@@ -14,55 +14,97 @@ enum Role {
 }
 
 model User {
-    id        String   @id @default(uuid()) // Can be mapped to Clerk User ID
-  email     String   @unique
-  name      String
-  role      Role     @default(STUDENT)
+    id        String   @id @default(uuid())
+    clerkId   String   @unique
+    email     String   @unique
+    name      String
+    role      Role     @default(STUDENT)
 
-  // Relations
-  examsCreated Exam[]   @relation("TeacherExams")
-  results      Result[]
-  createdAt    DateTime @default(now())
+    // Relations
+    examsCreated     Exam[]            @relation("TeacherExams")
+    results          Result[]
+    examAssignments  ExamAssignment[]
+    createdAt        DateTime          @default(now())
+
+    @@index([clerkId])
 }
 
-// 2. Exam Model (Managed by Teachers)
+// 2. Exam Status Enum
+enum ExamStatus {
+    DRAFT
+    PUBLISHED
+    ACTIVE
+    CLOSED
+}
+
+// 3. Exam Model (Managed by Teachers)
 model Exam {
   id          String     @id @default(uuid())
   title       String
   description String?
-  startTime   DateTime
-  endTime     DateTime
-  duration    Int        // Duration in minutes [2]
-  totalMarks  Int        // Custom marks [2]
+  startTime   DateTime?
+  endTime     DateTime?
+  duration    Int        // Duration in minutes
+  totalMarks  Int
+  passPercent Float      @default(40)
+  status      ExamStatus @default(DRAFT)
   teacherId   String
   teacher     User       @relation("TeacherExams", fields: [teacherId], references: [id])
   
   // Relations
   questions   Question[]
   results     Result[]
+  assignments ExamAssignment[]
   createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([teacherId])
+  @@index([status])
 }
 
-// 3. Question Model (Supports both MCQ and Coding)
+// 4. Exam Assignment - links students to exams
+model ExamAssignment {
+  id        String   @id @default(uuid())
+  examId    String
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@unique([examId, studentId])
+  @@index([studentId])
+}
+
+// 5. Question Model (Supports both MCQ and Coding)
 enum QuestionType {
   MCQ
   CODING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
 }
 
 model Question {
   id            String       @id @default(uuid())
   examId        String
   exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
-  type          QuestionType // Identifies if it's MCQ or Coding [2]
-  text          String       // The actual question or problem statement
+  type          QuestionType
+  text          String
   marks         Int
+  difficulty    Difficulty   @default(MEDIUM)
+  order         Int          @default(0)
   
   // Relations (Only one of these will be populated based on QuestionType)
   mcqOptions    McqOption[]
   testCases     TestCase[]
+
+  @@index([examId])
 }
 
-// 4. MCQ Options (For Multiple Choice Questions)
+// 6. MCQ Options (For Multiple Choice Questions)
 model McqOption {
   id          String   @id @default(uuid())
   questionId  String
@@ -71,27 +113,43 @@ model McqOption {
   isCorrect   Boolean  @default(false)
 }
 
-// 5. Test Cases (For Coding Challenges)
+// 7. Test Cases (For Coding Challenges)
 model TestCase {
   id             String   @id @default(uuid())
   questionId     String
   question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  input          String   // e.g., "2 3"
-  expectedOutput String   // e.g., "5"
+  input          String
+  expectedOutput String
+  isVisible      Boolean  @default(true)
 }
 
-// 6. Results & Analytics Model (Generated after student submission)
+// 8. Result Status Enum
+enum ResultStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+// 9. Results & Analytics Model
 model Result {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   studentId      String
-  student        User     @relation(fields: [studentId], references: [id])
+  student        User         @relation(fields: [studentId], references: [id])
   examId         String
-  exam           Exam     @relation(fields: [examId], references: [id])
+  exam           Exam         @relation(fields: [examId], references: [id])
   
-  score          Int
-  status         String   // e.g., "Pass" or "Fail" [3]
-  tabSwitches    Int      @default(0) // Tracks how many times they switched tabs [4]
-  performanceLog Json?    // Stores detailed performance report data [3]
+  totalScore     Int          @default(0)
+  maxScore       Int          @default(0)
+  percentage     Float        @default(0)
+  passed         Boolean      @default(false)
+  status         ResultStatus @default(IN_PROGRESS)
+  tabSwitches    Int          @default(0)
+  answers        Json?        // Stores student answers as JSON
+  performanceLog Json?
   
-  submittedAt    DateTime @default(now())
+  submittedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([studentId, examId])
+  @@index([examId])
 }

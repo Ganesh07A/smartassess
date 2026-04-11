@@ -12,16 +12,27 @@
   "license": "ISC",
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
+    "@clerk/express": "^2.1.0",
+    "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.6.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.0",
+    "dotenv-safe": "^9.1.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "helmet": "^8.1.0",
     "nodemon": "^3.1.14",
-    "prisma": "7.6.0"
+    "pg": "^8.20.0",
+    "prisma": "7.6.0",
+    "svix": "^1.90.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@prisma/config": "^7.6.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.2",
+    "@types/pg": "^8.20.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }

@@ -1,0 +1,57 @@
+'use client';
+import { Search, Bell, ChevronDown, User, Menu } from 'lucide-react';
+
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
+  return (
+    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 sm:px-10 sticky top-0 z-30 w-full lg:w-[calc(100%-16rem)] lg:ml-64 transition-all duration-300">
+      <div className="flex items-center gap-4 flex-1">
+        <button 
+          onClick={onMenuClick}
+          className="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        
+        <div className="relative w-full max-w-md group hidden sm:block">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600 text-gray-400">
+            <Search className="w-5 h-5" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search exams or students..."
+            className="w-full bg-gray-50 border-none rounded-2xl py-3 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all outline-none"
+          />
+        </div>
+        
+        {/* Mobile Search Icon Only */}
+        <button className="sm:hidden p-2 text-gray-400 hover:text-blue-600 transition-colors">
+          <Search className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 sm:gap-6">
+        <button className="relative p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+          <Bell className="w-6 h-6" />
+          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full" />
+        </button>
+
+        <div className="h-10 w-[1px] bg-gray-200 hidden sm:block" />
+
+        <div className="flex items-center gap-3 cursor-pointer group p-1 sm:pl-3 rounded-2xl hover:bg-gray-50 transition-all">
+          <div className="text-right hidden md:block">
+            <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Sarah Jenkins</p>
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Senior Instructor</p>
+          </div>
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200 overflow-hidden">
+            <User className="w-6 h-6" />
+          </div>
+          <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-y-0.5 transition-all hidden sm:block" />
+        </div>
+      </div>
+    </header>
+  );
+}
