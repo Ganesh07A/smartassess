@@ -5,6 +5,14 @@ export interface TeacherStats {
   totalStudents: number;
   activeExams: number;
   avgScore: number;
+  completionRate: number;
+  completionByExam: {
+    examId: string;
+    examTitle: string;
+    assignedCount: number;
+    completedCount: number;
+    completionRate: number;
+  }[];
   recentActivity: {
     studentName: string;
     examTitle: string;

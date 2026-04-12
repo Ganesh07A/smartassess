@@ -11,7 +11,7 @@ export async function getTeacherStats(req: Request, res: Response, next: NextFun
 
     const teacherId = teacher.id;
 
-    const [totalExams, activeExams, recentResults, allResults] = await Promise.all([
+    const [totalExams, activeExams, recentResults, allResults, exams] = await Promise.all([
       // Total exams created by this teacher
       prisma.exam.count({ where: { teacherId } }),
 
@@ -34,6 +34,23 @@ export async function getTeacherStats(req: Request, res: Response, next: NextFun
         where: { exam: { teacherId }, status: 'SUBMITTED' },
         select: { percentage: true, studentId: true },
       }),
+
+      prisma.exam.findMany({
+        where: { teacherId },
+        select: {
+          id: true,
+          title: true,
+          _count: {
+            select: {
+              assignments: true,
+            },
+          },
+          results: {
+            where: { status: { in: ['SUBMITTED', 'GRADED'] } },
+            select: { studentId: true },
+          },
+        },
+      }),
     ]);
 
     // Total unique students who submitted
@@ -51,11 +68,35 @@ export async function getTeacherStats(req: Request, res: Response, next: NextFun
       count: allResults.filter((r) => r.percentage >= i * 10 && r.percentage < (i + 1) * 10).length,
     }));
 
+    const completionByExam = exams.map((exam) => {
+      const assignedCount = exam._count.assignments;
+      const completedCount = new Set(exam.results.map((result) => result.studentId)).size;
+      const completionRate = assignedCount > 0
+        ? Math.round((completedCount / assignedCount) * 100)
+        : 0;
+
+      return {
+        examId: exam.id,
+        examTitle: exam.title,
+        assignedCount,
+        completedCount,
+        completionRate,
+      };
+    });
+
+    const assignedTotal = completionByExam.reduce((sum, exam) => sum + exam.assignedCount, 0);
+    const completedTotal = completionByExam.reduce((sum, exam) => sum + exam.completedCount, 0);
+    const completionRate = assignedTotal > 0
+      ? Math.round((completedTotal / assignedTotal) * 100)
+      : 0;
+
     return res.json({
       totalExams,
       totalStudents: uniqueStudents,
       activeExams,
       avgScore,
+      completionRate,
+      completionByExam,
       recentActivity: recentResults.map((r) => ({
         studentName: r.student.name,
         examTitle: r.exam.title,

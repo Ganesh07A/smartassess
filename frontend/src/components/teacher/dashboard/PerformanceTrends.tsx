@@ -5,11 +5,9 @@ import { useTeacherStats } from '@/hooks/useTeacherStats';
 
 export function PerformanceTrends() {
   const [isMobile, setIsMobile] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const { stats, isLoading } = useTeacherStats();
 
   useEffect(() => {
-    setIsMounted(true);
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -20,6 +18,10 @@ export function PerformanceTrends() {
   const data = stats?.scoreDistribution
     ?.filter((b) => b.count > 0)
     .map((b) => ({ name: b.range, score: b.count })) ?? [];
+
+  const topCompletionExam = stats?.completionByExam
+    ?.slice()
+    .sort((a, b) => b.completionRate - a.completionRate)[0];
 
   // Fallback placeholder data if no submissions yet
   const chartData = data.length > 0 ? data : [
@@ -38,50 +40,46 @@ export function PerformanceTrends() {
       </div>
 
       <div className="flex-1 min-h-[250px] sm:min-h-[320px] -ml-4 sm:-ml-6">
-        {isMounted ? (
-          isLoading ? (
-            <div className="w-full h-full bg-gray-50 animate-pulse rounded-2xl" />
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                id="performance-trends-chart"
-                data={chartData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
-                  dx={-5}
-                />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', padding: '12px' }}
-                  itemStyle={{ color: '#2563eb', fontWeight: 700, fontSize: '12px' }}
-                  wrapperStyle={{ outline: 'none' }}
-                  formatter={(v: number) => [`${v} students`, 'Count']}
-                />
-                <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={isMobile ? 30 : 50}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={index === chartData.length - 1 ? '#2563eb' : '#bfdbfe'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )
-        ) : (
+        {isLoading ? (
           <div className="w-full h-full bg-gray-50 animate-pulse rounded-2xl" />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              id="performance-trends-chart"
+              data={chartData}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                dy={10}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
+                dx={-5}
+              />
+              <Tooltip
+                cursor={{ fill: 'transparent' }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', padding: '12px' }}
+                itemStyle={{ color: '#2563eb', fontWeight: 700, fontSize: '12px' }}
+                wrapperStyle={{ outline: 'none' }}
+                formatter={(v: number) => [`${v} students`, 'Count']}
+              />
+              <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={isMobile ? 30 : 50}>
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={index === chartData.length - 1 ? '#2563eb' : '#bfdbfe'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         )}
       </div>
 
@@ -95,7 +93,11 @@ export function PerformanceTrends() {
           <h4 className="text-xs sm:text-sm font-bold text-blue-900 leading-tight mb-1 tracking-tight">Performance Insight</h4>
           <p className="text-[10px] sm:text-xs text-blue-700/80 font-medium leading-relaxed">
             {stats && stats.avgScore > 0
-              ? `Average score across all submissions is ${stats.avgScore}%.`
+              ? `Average score is ${stats.avgScore}% with ${stats.completionRate}% assignment completion${
+                topCompletionExam
+                  ? ` (best: ${topCompletionExam.examTitle} at ${topCompletionExam.completionRate}%).`
+                  : '.'
+              }`
               : 'No submissions yet. Assign and publish exams to see results here.'}
           </p>
         </div>
