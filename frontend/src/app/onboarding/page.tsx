@@ -16,10 +16,7 @@ export default function OnboardingPage() {
     
     setLoading(true);
     try {
-      await api.post('/api/auth/set-role', { 
-        userId: user.id, 
-        role 
-      });
+      await api.post('/api/auth/set-role', { role });
       
       if (role === 'teacher') {
         router.push('/teacher/dashboard');
