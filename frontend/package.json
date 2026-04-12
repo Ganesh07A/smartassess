@@ -6,7 +6,9 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lint:changed": "eslint src/app/student/exams/[examId]/attempt/page.tsx src/lib/api/studentApi.ts",
+    "ci": "npm run lint:changed"
   },
 
   "dependencies": {

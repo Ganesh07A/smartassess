@@ -9,7 +9,7 @@ export interface StudentExam extends Exam {
     percentage: number;
     passed: boolean;
     tabSwitches: number;
-    answers?: any;
+    answers?: Record<string, unknown>;
   } | null;
 
 }
@@ -25,8 +25,17 @@ export interface StartAttemptResponse {
 }
 
 export interface SubmissionPayload {
-  answers: Record<string, any>;
+  answers: Record<string, unknown>;
   tabSwitches: number;
+}
+
+export interface SaveProgressPayload {
+  answers: Record<string, unknown>;
+}
+
+export interface ViolationPayload {
+  type: 'TAB_SWITCH' | 'FULLSCREEN_EXIT' | 'UNKNOWN';
+  metadata?: Record<string, unknown>;
 }
 
 export const studentApi = {
@@ -38,6 +47,12 @@ export const studentApi = {
 
   startAttempt: (id: string) =>
     api.post<StartAttemptResponse>(`/api/student/exams/${id}/start`),
+
+  saveProgress: (id: string, payload: SaveProgressPayload) =>
+    api.put(`/api/student/exams/${id}/save`, payload),
+
+  reportViolation: (id: string, payload: ViolationPayload) =>
+    api.post(`/api/student/exams/${id}/violation`, payload),
 
   submitExam: (id: string, payload: SubmissionPayload) =>
     api.post(`/api/student/exams/${id}/submit`, payload),
