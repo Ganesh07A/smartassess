@@ -1,5 +1,5 @@
 'use client';
-import { FileText, Users, Clock, Award, TrendingUp, LucideIcon } from 'lucide-react';
+import { FileText, Users, Clock, Award, Target, TrendingUp } from 'lucide-react';
 import { useTeacherStats } from '@/hooks/useTeacherStats';
 
 function StatSkeleton() {
@@ -21,7 +21,7 @@ export function StatsCards() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {Array.from({ length: 4 }).map((_, i) => <StatSkeleton key={i} />)}
+        {Array.from({ length: 5 }).map((_, i) => <StatSkeleton key={i} />)}
       </div>
     );
   }
@@ -55,10 +55,17 @@ export function StatsCards() {
       icon: Award,
       color: 'bg-amber-50 text-amber-600',
     },
+    {
+      label: 'Completion Rate',
+      value: `${stats?.completionRate ?? 0}%`,
+      growth: 'Assigned',
+      icon: Target,
+      color: 'bg-violet-50 text-violet-600',
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
       {cards.map((stat) => (
         <div
           key={stat.label}
