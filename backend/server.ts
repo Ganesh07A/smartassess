@@ -16,6 +16,7 @@ app.use(clerkMiddleware({
 }));
 
 app.use(securityMiddleware);
+app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 
 // Health check

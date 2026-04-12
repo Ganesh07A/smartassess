@@ -9,6 +9,14 @@ const router = Router();
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || '';
 
 router.post('/webhook', async (req, res) => {
+  let rawPayload: Buffer | string;
+
+  if (Buffer.isBuffer(req.body) || typeof req.body === 'string') {
+    rawPayload = req.body;
+  } else {
+    rawPayload = JSON.stringify(req.body ?? {});
+  }
+
   if (!webhookSecret) {
     console.warn('CLERK_WEBHOOK_SECRET not set - skipping webhook verification');
   } else {
@@ -21,7 +29,6 @@ router.post('/webhook', async (req, res) => {
     }
 
     const wh = new Webhook(webhookSecret);
-    const payload = JSON.stringify(req.body);
     const headers = {
       'svix-id': webhookId,
       'svix-timestamp': webhookTimestamp,
@@ -29,14 +36,24 @@ router.post('/webhook', async (req, res) => {
     };
 
     try {
-      wh.verify(payload, headers);
+      wh.verify(rawPayload, headers);
     } catch (err) {
       console.error('Webhook verification failed:', err);
       return res.status(400).json({ error: 'Invalid signature' });
     }
   }
 
-  const { type, data } = req.body;
+  const payloadText = Buffer.isBuffer(rawPayload) ? rawPayload.toString('utf8') : rawPayload;
+  let parsedPayload: any;
+
+  try {
+    parsedPayload = JSON.parse(payloadText);
+  } catch (err) {
+    console.error('Webhook payload JSON parsing failed:', err);
+    return res.status(400).json({ error: 'Invalid webhook payload' });
+  }
+
+  const { type, data } = parsedPayload;
 
   if (type === 'user.created') {
     const email = data.email_addresses?.[0]?.email_address;
