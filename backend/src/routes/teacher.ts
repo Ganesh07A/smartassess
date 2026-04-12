@@ -15,6 +15,12 @@ import {
   assignStudents,
   getAssignments,
 } from '../controllers/teacher/exams';
+import {
+  listExamResults,
+  getSubmissionDetail,
+  getExamAnalytics,
+  exportExamResults,
+} from '../controllers/teacher/results';
 
 const router = Router();
 
@@ -41,5 +47,11 @@ router.delete('/exams/:id/questions/:qid', deleteQuestion);
 // Student Assignments
 router.get('/exams/:id/assignments',  getAssignments);
 router.post('/exams/:id/assignments', assignStudents);
+
+// Results & Analytics
+router.get('/exams/:id/results',         listExamResults);
+router.get('/results/:submissionId',     getSubmissionDetail);
+router.get('/exams/:id/analytics',       getExamAnalytics);
+router.get('/exams/:id/results/export',  exportExamResults);
 
 export default router;
