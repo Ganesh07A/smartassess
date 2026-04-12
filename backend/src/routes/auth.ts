@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Webhook } from 'svix';
 import { clerkClient } from '@clerk/express';
 import prisma from '../lib/prisma';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -86,22 +87,34 @@ router.post('/webhook', async (req, res) => {
   res.json({ success: true });
 });
 
-router.post('/set-role', async (req, res) => {
-  const { userId, role } = req.body;
-  
-  if (!userId || !role) {
-    return res.status(400).json({ error: 'Missing userId or role' });
+router.post('/set-role', requireAuth, async (req, res) => {
+  const { role } = req.body;
+  const targetUserId = req.auth.userId;
+
+  if (!targetUserId || !role) {
+    return res.status(400).json({ error: 'Missing role' });
+  }
+
+  if (role !== 'student' && role !== 'teacher') {
+    return res.status(400).json({ error: 'Invalid role' });
   }
 
   try {
-    await clerkClient.users.updateUserMetadata(userId, {
+    const authUser = await clerkClient.users.getUser(targetUserId);
+    const currentRole = (authUser.publicMetadata?.role as string) || 'student';
+
+    if (currentRole === 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin role changes are not supported here' });
+    }
+
+    await clerkClient.users.updateUserMetadata(targetUserId, {
       publicMetadata: { role },
     });
 
-    const dbUser = await prisma.user.findUnique({ where: { clerkId: userId } });
+    const dbUser = await prisma.user.findUnique({ where: { clerkId: targetUserId } });
     if (dbUser) {
       await prisma.user.update({
-        where: { clerkId: userId },
+        where: { clerkId: targetUserId },
         data: { role: role.toUpperCase() as any },
       });
     }
