@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
+import { evaluateCodingSubmission } from '../services/judge0';
 
 // Helper: resolve student DB id from Clerk ID
 async function getStudentId(clerkId: string): Promise<string | null> {
@@ -266,46 +267,44 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
     }
 
     const { answers, tabSwitches } = req.body;
-    
+    if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
+      return res.status(400).json({ error: 'Invalid answers payload' });
+    }
+
     // Grading Logic
     const exam = await prisma.exam.findUnique({
       where: { id: req.params.id },
-      include: { 
-        questions: { 
-          include: { mcqOptions: true, testCases: true } 
-        } 
+      include: {
+        questions: {
+          include: { mcqOptions: true, testCases: true }
+        }
       }
     });
 
     if (!exam) throw new Error('Exam vanished');
 
-    let totalScore = 0;
-    const questions = exam.questions;
+    let totalScoreRaw = 0;
 
-    questions.forEach(q => {
-      const studentAnswer = answers[q.id];
-      if (!studentAnswer) return;
+    for (const question of exam.questions) {
+      const studentAnswer = answers[question.id] as Record<string, unknown> | undefined;
+      if (!studentAnswer || typeof studentAnswer !== 'object') continue;
 
-      if (q.type === 'MCQ') {
-        const correctOpt = q.mcqOptions.find(o => o.isCorrect);
+      if (question.type === 'MCQ') {
+        const correctOpt = question.mcqOptions.find(o => o.isCorrect);
         if (correctOpt && studentAnswer.optionId === correctOpt.id) {
-          totalScore += q.marks;
+          totalScoreRaw += question.marks;
         }
-      } else if (q.type === 'CODING') {
-        // String matching for now as per requirement
-        // In a real app, this would run code in a sandbox
-        const allTcsPassed = q.testCases.every(tc => {
-           // This is a placeholder for real execution. 
-           // We assume 'studentAnswer.output' is sent by the frontend after local mock run
-           // or we just mark it for manual review if no runner exists.
-           // For the generic requirement, let's assume direct comparison of an 'output' field if the student ran it.
-           return true; // Giving marks for attempt in this generic phase
-        });
-        if (allTcsPassed) totalScore += q.marks;
+      } else if (question.type === 'CODING') {
+        const sourceCode = typeof studentAnswer.code === 'string' ? studentAnswer.code : '';
+        const evaluation = await evaluateCodingSubmission(sourceCode, question.testCases);
+        if (evaluation.totalCount > 0) {
+          totalScoreRaw += (evaluation.passedCount / evaluation.totalCount) * question.marks;
+        }
       }
-    });
+    }
 
-    const percentage = (totalScore / exam.totalMarks) * 100;
+    const totalScore = Math.round(totalScoreRaw);
+    const percentage = exam.totalMarks > 0 ? (totalScore / exam.totalMarks) * 100 : 0;
     const passed = percentage >= exam.passPercent;
 
     const updatedResult = await prisma.result.update({
