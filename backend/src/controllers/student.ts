@@ -7,6 +7,39 @@ async function getStudentId(clerkId: string): Promise<string | null> {
   return user?.id || null;
 }
 
+async function ensureEligibleExam(examId: string, studentId: string) {
+  const assigned = await prisma.examAssignment.findUnique({
+    where: { examId_studentId: { examId, studentId } }
+  });
+
+  if (!assigned) {
+    return { error: { status: 403, message: 'You are not assigned to this exam' } };
+  }
+
+  const exam = await prisma.exam.findUnique({ where: { id: examId } });
+  if (!exam) {
+    return { error: { status: 404, message: 'Exam not found' } };
+  }
+
+  if (exam.status !== 'ACTIVE' && exam.status !== 'PUBLISHED') {
+    return { error: { status: 400, message: 'Exam is not currently available' } };
+  }
+
+  return { exam };
+}
+
+async function ensureActiveAttempt(examId: string, studentId: string) {
+  const result = await prisma.result.findFirst({
+    where: { examId, studentId, status: 'IN_PROGRESS' }
+  });
+
+  if (!result) {
+    return { error: { status: 400, message: 'No active attempt found' } };
+  }
+
+  return { result };
+}
+
 // ───────────────────────────────────────────────
 // GET /api/student/exams
 // ───────────────────────────────────────────────
@@ -48,11 +81,10 @@ export async function getExamDetails(req: Request, res: Response, next: NextFunc
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    // Check assignment
-    const assigned = await prisma.examAssignment.findUnique({
-      where: { examId_studentId: { examId: req.params.id, studentId } }
-    });
-    if (!assigned) return res.status(403).json({ error: 'You are not assigned to this exam' });
+    const eligibility = await ensureEligibleExam(req.params.id, studentId);
+    if ('error' in eligibility) {
+      return res.status(eligibility.error.status).json({ error: eligibility.error.message });
+    }
 
     const exam = await prisma.exam.findUnique({
       where: { id: req.params.id },
@@ -68,9 +100,6 @@ export async function getExamDetails(req: Request, res: Response, next: NextFunc
     });
 
     if (!exam) return res.status(404).json({ error: 'Exam not found' });
-    if (exam.status !== 'ACTIVE' && exam.status !== 'PUBLISHED') {
-       return res.status(400).json({ error: 'Exam is not currently available' });
-    }
 
     return res.json(exam);
   } catch (err) {
@@ -86,11 +115,10 @@ export async function startAttempt(req: Request, res: Response, next: NextFuncti
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    // Check assignment
-    const assigned = await prisma.examAssignment.findUnique({
-      where: { examId_studentId: { examId: req.params.id, studentId } }
-    });
-    if (!assigned) return res.status(403).json({ error: 'Forbidden' });
+    const eligibility = await ensureEligibleExam(req.params.id, studentId);
+    if ('error' in eligibility) {
+      return res.status(eligibility.error.status).json({ error: eligibility.error.message });
+    }
 
     // Check if already started
     let result = await prisma.result.findFirst({
@@ -104,19 +132,116 @@ export async function startAttempt(req: Request, res: Response, next: NextFuncti
       return res.json(result);
     }
 
-    const exam = await prisma.exam.findUnique({ where: { id: req.params.id } });
-    if (!exam) return res.status(404).json({ error: 'Exam not found' });
-
     result = await prisma.result.create({
       data: {
         examId: req.params.id,
         studentId,
         status: 'IN_PROGRESS',
-        maxScore: exam.totalMarks,
+        maxScore: eligibility.exam.totalMarks,
       }
     });
 
     return res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ───────────────────────────────────────────────
+// PUT /api/student/exams/:id/save
+// ───────────────────────────────────────────────
+export async function saveExamProgress(req: Request, res: Response, next: NextFunction) {
+  try {
+    const studentId = await getStudentId(req.auth.userId);
+    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+
+    const eligibility = await ensureEligibleExam(req.params.id, studentId);
+    if ('error' in eligibility) {
+      return res.status(eligibility.error.status).json({ error: eligibility.error.message });
+    }
+
+    const activeAttempt = await ensureActiveAttempt(req.params.id, studentId);
+    if ('error' in activeAttempt) {
+      return res.status(activeAttempt.error.status).json({ error: activeAttempt.error.message });
+    }
+
+    const { answers } = req.body;
+    if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
+      return res.status(400).json({ error: 'Invalid answers payload' });
+    }
+
+    const existingAnswers = (activeAttempt.result.answers as Record<string, unknown> | null) ?? {};
+    const mergedAnswers = {
+      ...existingAnswers,
+      ...answers,
+    };
+
+    const updatedResult = await prisma.result.update({
+      where: { id: activeAttempt.result.id },
+      data: {
+        answers: mergedAnswers,
+      },
+      select: {
+        id: true,
+        status: true,
+        answers: true,
+        tabSwitches: true,
+      }
+    });
+
+    return res.json(updatedResult);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ───────────────────────────────────────────────
+// POST /api/student/exams/:id/violation
+// ───────────────────────────────────────────────
+export async function reportViolation(req: Request, res: Response, next: NextFunction) {
+  try {
+    const studentId = await getStudentId(req.auth.userId);
+    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+
+    const eligibility = await ensureEligibleExam(req.params.id, studentId);
+    if ('error' in eligibility) {
+      return res.status(eligibility.error.status).json({ error: eligibility.error.message });
+    }
+
+    const activeAttempt = await ensureActiveAttempt(req.params.id, studentId);
+    if ('error' in activeAttempt) {
+      return res.status(activeAttempt.error.status).json({ error: activeAttempt.error.message });
+    }
+
+    const metadata = req.body?.metadata;
+    const eventType = typeof req.body?.type === 'string' ? req.body.type : 'UNKNOWN';
+
+    const existingLog = Array.isArray(activeAttempt.result.performanceLog)
+      ? activeAttempt.result.performanceLog
+      : [];
+
+    const event = {
+      type: eventType,
+      metadata: metadata && typeof metadata === 'object' ? metadata : {},
+      at: new Date().toISOString(),
+    };
+
+    const updatedResult = await prisma.result.update({
+      where: { id: activeAttempt.result.id },
+      data: {
+        tabSwitches: {
+          increment: 1,
+        },
+        performanceLog: [...existingLog, event],
+      },
+      select: {
+        id: true,
+        tabSwitches: true,
+        performanceLog: true,
+      }
+    });
+
+    return res.json(updatedResult);
   } catch (err) {
     next(err);
   }
@@ -130,10 +255,15 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    const result = await prisma.result.findFirst({
-      where: { examId: req.params.id, studentId, status: 'IN_PROGRESS' }
-    });
-    if (!result) return res.status(400).json({ error: 'No active attempt found' });
+    const eligibility = await ensureEligibleExam(req.params.id, studentId);
+    if ('error' in eligibility) {
+      return res.status(eligibility.error.status).json({ error: eligibility.error.message });
+    }
+
+    const activeAttempt = await ensureActiveAttempt(req.params.id, studentId);
+    if ('error' in activeAttempt) {
+      return res.status(activeAttempt.error.status).json({ error: activeAttempt.error.message });
+    }
 
     const { answers, tabSwitches } = req.body;
     
@@ -179,14 +309,14 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
     const passed = percentage >= exam.passPercent;
 
     const updatedResult = await prisma.result.update({
-      where: { id: result.id },
+      where: { id: activeAttempt.result.id },
       data: {
         status: 'GRADED',
         totalScore,
         percentage,
         passed,
         answers,
-        tabSwitches: tabSwitches || result.tabSwitches,
+        tabSwitches: tabSwitches || activeAttempt.result.tabSwitches,
         submittedAt: new Date()
       }
     });

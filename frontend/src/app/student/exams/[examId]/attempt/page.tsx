@@ -2,12 +2,16 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
-  Clock, Shield, Layout, List, 
+  Clock, Shield, 
   ChevronLeft, ChevronRight, CheckCircle, 
-  Maximize2, AlertTriangle, Terminal
+  Terminal
 } from 'lucide-react';
 import { studentApi, ExamAttempt } from '@/lib/api/studentApi';
 import toast from 'react-hot-toast';
+
+type AnswerValue =
+  | { type: 'MCQ'; optionId: string }
+  | { type: 'CODING'; code: string };
 
 export default function ExamAttemptPage() {
   const { examId } = useParams<{ examId: string }>();
@@ -15,69 +19,64 @@ export default function ExamAttemptPage() {
   
   const [exam, setExam] = useState<ExamAttempt | null>(null);
   const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [timeLeft, setTimeLeft] = useState(0); // seconds
   const [loading, setLoading] = useState(true);
   const [isStarted, setIsStarted] = useState(false);
   
   // Proctoring
   const [tabSwitches, setTabSwitches] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const SWITCH_LIMIT = 3;
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const autosaveRef = useRef<NodeJS.Timeout | null>(null);
+  const violationLockRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+  const answersRef = useRef<Record<string, AnswerValue>>({});
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const res = await studentApi.getExam(examId);
       setExam(res.data);
       setTimeLeft(res.data.duration * 60);
       setLoading(false);
-    } catch (err: any) {
-      toast.error(err.displayMessage ?? 'Failed to load exam');
+    } catch {
+      toast.error('Failed to load exam');
       router.push('/student/dashboard');
     }
-  };
+  }, [examId, router]);
 
   useEffect(() => {
     fetchData();
-  }, [examId]);
-
-  // Tab Switch Detection
-  useEffect(() => {
-    if (!isStarted) return;
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        setTabSwitches(prev => {
-          const next = prev + 1;
-          if (next >= SWITCH_LIMIT) {
-            handleSubmit(true); // Auto-submit on limit hit
-            toast.error('Limit exceeded. Exam terminated.');
-          } else {
-            toast.error(`Warning: Tab switch detected (${next}/${SWITCH_LIMIT})`, { icon: '⚠️' });
-          }
-          return next;
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isStarted]);
+  }, [fetchData]);
 
   // Fullscreen enforcement
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
+      document.documentElement.requestFullscreen().catch(() => {
         toast.error('Fullscreen request failed');
       });
-      setIsFullscreen(true);
     } else {
       document.exitFullscreen();
-      setIsFullscreen(false);
     }
   };
+
+  const handleSubmit = useCallback(async (autoSubmit = false) => {
+    if (!autoSubmit && !confirm('Are you sure you want to submit?')) return;
+    
+    try {
+      isSubmittingRef.current = true;
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (autosaveRef.current) clearInterval(autosaveRef.current);
+      await studentApi.submitExam(examId, { answers: answersRef.current, tabSwitches });
+      if (document.fullscreenElement) document.exitFullscreen();
+      toast.success('Exam submitted successfully!');
+      router.push(`/student/dashboard`);
+    } catch {
+      toast.error('Failed to submit exam');
+      isSubmittingRef.current = false;
+    }
+  }, [examId, router, tabSwitches]);
 
   const startExam = async () => {
     try {
@@ -95,28 +94,86 @@ export default function ExamAttemptPage() {
           return prev - 1;
         });
       }, 1000);
-    } catch (err) {
+    } catch {
       toast.error('Failed to start attempt');
     }
   };
 
-  const handleSubmit = async (autoSubmit = false) => {
-    if (!autoSubmit && !confirm('Are you sure you want to submit?')) return;
-    
-    try {
-      if (timerRef.current) clearInterval(timerRef.current);
-      await studentApi.submitExam(examId, { answers, tabSwitches });
-      if (document.fullscreenElement) document.exitFullscreen();
-      toast.success('Exam submitted successfully!');
-      router.push(`/student/dashboard`);
-    } catch (err) {
-      toast.error('Failed to submit exam');
-    }
+  // Tab Switch Detection
+  useEffect(() => {
+    if (!isStarted) return;
+
+    const handleViolation = async (
+      type: 'TAB_SWITCH' | 'FULLSCREEN_EXIT' | 'UNKNOWN',
+      metadata: Record<string, unknown> = {}
+    ) => {
+      if (violationLockRef.current) return;
+      violationLockRef.current = true;
+
+      try {
+        const res = await studentApi.reportViolation(examId, { type, metadata });
+        const updatedCount = res.data?.tabSwitches ?? 0;
+        setTabSwitches(updatedCount);
+
+        if (updatedCount >= SWITCH_LIMIT) {
+          handleSubmit(true);
+          toast.error('Limit exceeded. Exam terminated.');
+        } else {
+          toast.error(`Warning: Tab switch detected (${updatedCount}/${SWITCH_LIMIT})`, { icon: '⚠️' });
+        }
+      } catch {
+        toast.error('Failed to report proctoring violation');
+      } finally {
+        violationLockRef.current = false;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        void handleViolation('TAB_SWITCH', { visibilityState: document.visibilityState });
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      if (isSubmittingRef.current) return;
+      if (!document.fullscreenElement) {
+        void handleViolation('FULLSCREEN_EXIT', { reason: 'fullscreenchange' });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [isStarted, examId, handleSubmit]);
+
+  const updateAnswer = (qid: string, val: AnswerValue) => {
+    setAnswers(prev => {
+      const next = { ...prev, [qid]: val };
+      answersRef.current = next;
+      return next;
+    });
   };
 
-  const updateAnswer = (qid: string, val: any) => {
-    setAnswers(prev => ({ ...prev, [qid]: val }));
-  };
+  useEffect(() => {
+    if (!isStarted) return;
+
+    autosaveRef.current = setInterval(async () => {
+      if (Object.keys(answersRef.current).length === 0) return;
+
+      try {
+        await studentApi.saveProgress(examId, { answers: answersRef.current });
+      } catch {
+        toast.error('Autosave failed. Please check your connection.');
+      }
+    }, 30000);
+
+    return () => {
+      if (autosaveRef.current) clearInterval(autosaveRef.current);
+    };
+  }, [isStarted, examId]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>;
 
