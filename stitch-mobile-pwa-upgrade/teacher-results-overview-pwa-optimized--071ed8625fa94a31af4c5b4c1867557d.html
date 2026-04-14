@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+<title>SmartAssess | Results &amp; Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#dbe1ff",
+                        "inverse-primary": "#b4c5ff",
+                        "error": "#ba1a1a",
+                        "outline": "#737686",
+                        "surface-tint": "#0053db",
+                        "surface-container-low": "#f2f3f6",
+                        "tertiary": "#943700",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#00174b",
+                        "secondary": "#495c95",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-bright": "#f8f9fc",
+                        "tertiary-container": "#bc4800",
+                        "on-secondary-fixed-variant": "#31447b",
+                        "primary": "#004ac6",
+                        "inverse-on-surface": "#f0f1f4",
+                        "on-background": "#191c1e",
+                        "surface-container-highest": "#e1e2e5",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fc",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e7e8eb",
+                        "outline-variant": "#c3c6d7",
+                        "on-tertiary-container": "#ffede6",
+                        "background": "#f8f9fc",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-surface": "#191c1e",
+                        "surface-container": "#edeef1",
+                        "on-primary-container": "#eeefff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-primary-fixed": "#00174b",
+                        "surface-variant": "#e1e2e5",
+                        "surface-dim": "#d9dadd",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "secondary-container": "#acbfff",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "inverse-surface": "#2e3133",
+                        "on-secondary-container": "#394c84",
+                        "primary-container": "#2563eb",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-surface-variant": "#434655",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Work Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .label-style { font-family: 'Work Sans', sans-serif; }
+        .glass-header { background: rgba(248, 249, 252, 0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 74, 198, 0.05); }
+        .sticky-context-bar { position: sticky; top: 0; z-index: 45; }
+        .pwa-tap-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased overflow-x-hidden">
+<!-- SideNavBar (Authority: JSON + Conflict Resolution) -->
+<aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex-col py-6 gap-2 z-50">
+<div class="px-6 mb-8">
+<h1 class="text-2xl font-black text-blue-700 dark:text-blue-400">SmartAssess</h1>
+<p class="font-work-sans text-[11px] uppercase tracking-wider text-slate-500">Teacher Portal</p>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-in-out text-slate-500 hover:text-blue-600 hover:bg-slate-100" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-in-out text-slate-500 hover:text-blue-600 hover:bg-slate-100" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-medium">Exams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-in-out text-blue-700 dark:text-blue-300 font-bold border-r-4 border-blue-700 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20" href="#">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-medium">Results</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-in-out text-slate-500 hover:text-blue-600 hover:bg-slate-100" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<div class="flex items-center gap-3 p-2 bg-white rounded-2xl shadow-sm">
+<img alt="Teacher Profile" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJSlSlhmk95Ati4K9oQG7JKoLw4Kr7TT8FNESGUX0vHDOYb9HkWvRNuTATLNPhIPSxq7s7vAnDZss-8unXAbUaZtFbUnObF3cz3ULyuzcEOiJbWeU6lZyRFmBFGK1mtngODOA2R6kS2HgpIG9htkUFG59WYC5GRA59wkZFpMeJIMLAce40UZ14EMFxvAi9FPvK0eKbI9lBSqOXnBhcvfsfe6I5JRyvdL_zgLdinW99VVqmat3tNiW8Eh-CRMuhL5Es5gmfM1UVQQo"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Dr. Sarah Chen</p>
+<p class="text-[10px] text-slate-500 uppercase font-work-sans">Senior Proctor</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen pb-24 md:pb-8">
+<!-- TopAppBar & Sticky Context Bar -->
+<header class="sticky-context-bar glass-header z-40 flex justify-between items-center h-16 px-4 md:px-8">
+<div class="flex items-center gap-3">
+<h2 class="text-lg md:text-xl font-bold tracking-tight text-on-surface truncate">Results &amp; Analytics</h2>
+</div>
+<div class="flex items-center gap-2">
+<div class="hidden md:flex relative w-64 mr-4">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" data-icon="search">search</span>
+<input class="w-full bg-surface-container-high border-none rounded-full py-1.5 pl-10 pr-4 focus:ring-2 focus:ring-primary/20 text-sm font-body" placeholder="Search..." type="text"/>
+</div>
+<button class="pwa-tap-target p-2 rounded-full hover:bg-slate-100 transition-colors relative">
+<span class="material-symbols-outlined text-2xl" data-icon="search">search</span>
+</button>
+<button class="pwa-tap-target p-2 rounded-full hover:bg-slate-100 transition-colors relative">
+<span class="material-symbols-outlined text-2xl" data-icon="notifications">notifications</span>
+<span class="absolute top-2.5 right-2.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="pt-6 px-4 md:px-12 max-w-7xl mx-auto">
+<!-- Sub-hero Intro (Mobile optimized) -->
+<div class="mb-8 md:mb-10">
+<p class="text-on-surface-variant text-sm md:text-base font-body">Monitor performance and generate deep-dive reports for your active cohorts.</p>
+</div>
+<!-- Bento Stats Grid (Optimized stacking) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-12">
+<div class="bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm border border-outline-variant/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-primary/10 text-primary rounded-2xl">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+</div>
+<span class="text-xs font-work-sans font-bold text-primary uppercase">+12%</span>
+</div>
+<p class="text-[11px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Total Submissions</p>
+<h3 class="text-2xl md:text-3xl font-black">2,482</h3>
+</div>
+<div class="bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm border border-outline-variant/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-secondary/10 text-secondary rounded-2xl">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+</div>
+<span class="text-xs font-work-sans font-bold text-secondary uppercase">Stable</span>
+</div>
+<p class="text-[11px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Avg. Pass Rate</p>
+<h3 class="text-2xl md:text-3xl font-black">84.5%</h3>
+</div>
+<div class="sm:col-span-2 md:col-span-1 bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm border-2 border-primary/5">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-tertiary/10 text-tertiary rounded-2xl">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+</div>
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-blue-100 border-2 border-white"></div>
+<div class="w-6 h-6 rounded-full bg-blue-200 border-2 border-white"></div>
+</div>
+</div>
+<p class="text-[11px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Leaderboards Active</p>
+<h3 class="text-2xl md:text-3xl font-black">18</h3>
+</div>
+</div>
+<!-- Main Exams Card/Section -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+<div>
+<h4 class="text-lg md:text-xl font-bold">Exam Performance Catalog</h4>
+<p class="text-xs md:text-sm text-on-surface-variant font-body">Current semester assessment breakdown</p>
+</div>
+<div class="flex gap-2 w-full md:w-auto">
+<button class="flex-1 md:flex-none pwa-tap-target flex items-center justify-center gap-2 px-4 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-colors font-semibold text-sm">
+<span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+                        Filter
+                    </button>
+<button class="flex-1 md:flex-none pwa-tap-target flex items-center justify-center gap-2 px-4 rounded-xl bg-primary text-on-primary hover:opacity-90 transition-opacity font-bold text-sm shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-lg" data-icon="download">download</span>
+                        Export
+                    </button>
+</div>
+</div>
+<!-- Responsive Layout: Desktop Table / Mobile Cards -->
+<div class="bg-surface-container-lowest rounded-3xl shadow-sm overflow-hidden border border-outline-variant/5">
+<!-- Desktop Table -->
+<div class="hidden md:block overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-8 py-4 text-[11px] font-work-sans font-bold uppercase tracking-widest text-slate-500">Exam Title</th>
+<th class="px-8 py-4 text-[11px] font-work-sans font-bold uppercase tracking-widest text-slate-500">Submissions</th>
+<th class="px-8 py-4 text-[11px] font-work-sans font-bold uppercase tracking-widest text-slate-500">Total Marks</th>
+<th class="px-8 py-4 text-[11px] font-work-sans font-bold uppercase tracking-widest text-slate-500">Pass Rate</th>
+<th class="px-8 py-4 text-[11px] font-work-sans font-bold uppercase tracking-widest text-slate-500">Status</th>
+<th class="px-8 py-4 text-[11px] font-work-sans font-bold uppercase tracking-widest text-slate-500 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Advanced Microeconomics Q3</p>
+<p class="text-xs text-slate-400 font-body">Code: ECON-402-A</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-6">
+<p class="font-semibold text-on-surface">142<span class="text-slate-400 font-normal"> / 150</span></p>
+</td>
+<td class="px-8 py-6">
+<p class="font-semibold text-on-surface">100</p>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<span class="font-bold text-primary">92%</span>
+<div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 92%;"></div>
+</div>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase font-work-sans">Completed</span>
+</td>
+<td class="px-8 py-6">
+<div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-xl text-xs font-bold hover:scale-95 transition-transform">Open</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-tertiary/5 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="functions">functions</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Vector Calculus Midterm</p>
+<p class="text-xs text-slate-400 font-body">Code: MATH-201</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-6">
+<p class="font-semibold text-on-surface">88<span class="text-slate-400 font-normal"> / 95</span></p>
+</td>
+<td class="px-8 py-6">
+<p class="font-semibold text-on-surface">50</p>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<span class="font-bold text-tertiary">68%</span>
+<div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 68%;"></div>
+</div>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[10px] font-bold uppercase font-work-sans">Action Req.</span>
+</td>
+<td class="px-8 py-6">
+<div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+</button>
+<button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-xl text-xs font-bold hover:scale-95 transition-transform">Open</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Mobile Cards (PWA Optimized) -->
+<div class="md:hidden divide-y divide-outline-variant/10">
+<!-- Mobile Exam Card 1 -->
+<div class="p-5 active:bg-slate-50 transition-colors">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+</div>
+<div class="overflow-hidden">
+<h5 class="font-bold text-on-surface truncate">Advanced Microeconomics Q3</h5>
+<p class="text-[10px] text-slate-400 font-body uppercase tracking-wider">ECON-402-A</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-bold uppercase font-work-sans shrink-0">Completed</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-5 bg-surface-container-low/50 p-4 rounded-2xl">
+<div>
+<p class="text-[10px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Submissions</p>
+<p class="font-bold text-on-surface">142<span class="text-slate-400 font-normal">/150</span></p>
+</div>
+<div>
+<p class="text-[10px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Pass Rate</p>
+<div class="flex items-center gap-2">
+<span class="font-bold text-primary">92%</span>
+<div class="w-12 h-1 bg-slate-200 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 92%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 pwa-tap-target bg-primary-container text-on-primary-container rounded-xl text-sm font-bold shadow-sm">
+                                View Details
+                            </button>
+<button class="pwa-tap-target px-4 border border-outline-variant/30 rounded-xl text-slate-500">
+<span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+</button>
+</div>
+</div>
+<!-- Mobile Exam Card 2 -->
+<div class="p-5 active:bg-slate-50 transition-colors">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-tertiary/5 flex items-center justify-center text-tertiary shrink-0">
+<span class="material-symbols-outlined" data-icon="functions">functions</span>
+</div>
+<div class="overflow-hidden">
+<h5 class="font-bold text-on-surface truncate">Vector Calculus Midterm</h5>
+<p class="text-[10px] text-slate-400 font-body uppercase tracking-wider">MATH-201</p>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[9px] font-bold uppercase font-work-sans shrink-0">Action Req.</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-5 bg-surface-container-low/50 p-4 rounded-2xl">
+<div>
+<p class="text-[10px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Submissions</p>
+<p class="font-bold text-on-surface">88<span class="text-slate-400 font-normal">/95</span></p>
+</div>
+<div>
+<p class="text-[10px] font-work-sans text-slate-500 uppercase tracking-widest mb-1">Pass Rate</p>
+<div class="flex items-center gap-2">
+<span class="font-bold text-tertiary">68%</span>
+<div class="w-12 h-1 bg-slate-200 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full" style="width: 68%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 pwa-tap-target bg-primary-container text-on-primary-container rounded-xl text-sm font-bold shadow-sm">
+                                Open Midterm
+                            </button>
+<button class="pwa-tap-target px-4 border border-outline-variant/30 rounded-xl text-slate-500">
+<span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Recently Archived (Mobile Skeleton View) -->
+<div class="mb-12">
+<h5 class="text-[11px] font-work-sans font-bold text-slate-400 uppercase tracking-widest mb-4">Recently Archived</h5>
+<div class="space-y-3">
+<div class="h-16 w-full bg-white/50 animate-pulse rounded-2xl flex items-center px-4 md:px-8 gap-4">
+<div class="w-10 h-10 bg-slate-100 rounded-xl shrink-0"></div>
+<div class="h-3 w-32 md:w-48 bg-slate-100 rounded-full"></div>
+<div class="hidden md:block h-3 w-24 bg-slate-100 rounded-full ml-auto"></div>
+<div class="h-3 w-16 md:w-24 bg-slate-100 rounded-full ml-auto md:ml-0"></div>
+</div>
+</div>
+</div>
+<!-- Empty State (Mobile Centered) -->
+<div class="bg-surface-container-low rounded-3xl p-8 md:p-12 text-center flex flex-col items-center border-2 border-dashed border-outline-variant/50 mb-12">
+<div class="w-16 h-16 md:w-20 md:h-20 bg-surface-container-highest rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-3xl md:text-4xl text-slate-400" data-icon="search_off">search_off</span>
+</div>
+<h4 class="text-lg md:text-xl font-bold mb-2">No Draft Exams Found</h4>
+<p class="text-on-surface-variant text-sm md:text-base max-w-sm mx-auto mb-8 font-body">It looks like you don't have any inactive drafts for this cohort.</p>
+<button class="pwa-tap-target w-full md:w-auto px-8 bg-white text-primary border border-primary/20 rounded-2xl font-bold hover:bg-slate-50 transition-colors">Create Assessment</button>
+</div>
+<!-- Error State Pattern (Accessible height) -->
+<div class="bg-error-container/10 p-4 rounded-2xl flex items-start md:items-center gap-4 border border-error/10 mb-8">
+<span class="material-symbols-outlined text-error shrink-0" data-icon="error_outline">error_outline</span>
+<div class="flex-1">
+<p class="text-sm text-error font-medium leading-tight">Failed to synchronize real-time analytics for 'History Q4'.</p>
+</div>
+<button class="pwa-tap-target text-xs font-bold text-error uppercase font-work-sans hover:underline px-2 shrink-0">Retry</button>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Navigation (JSON Requirement) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-100 flex justify-around items-center px-2 z-50">
+<a class="pwa-tap-target flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="dashboard">dashboard</span>
+<span class="text-[9px] font-work-sans font-medium uppercase">Home</span>
+</a>
+<a class="pwa-tap-target flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="assignment">assignment</span>
+<span class="text-[9px] font-work-sans font-medium uppercase">Exams</span>
+</a>
+<a class="pwa-tap-target flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="text-[9px] font-work-sans font-bold uppercase">Results</span>
+</a>
+<a class="pwa-tap-target flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
+<span class="text-[9px] font-work-sans font-medium uppercase">Setup</span>
+</a>
+</nav>
+<!-- Floating Action Button (Mobile PWA optimization) -->
+<button class="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40">
+<span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
+</button>
+</body></html>

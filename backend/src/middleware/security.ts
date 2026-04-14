@@ -4,11 +4,13 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 
 export const corsMiddleware = cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: true, // Allow any origin for dev
   credentials: true,
 });
 
-export const helmetMiddleware = helmet();
+export const helmetMiddleware = helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+});
 
 export const rateLimitMiddleware = rateLimit({
   windowMs: 15 * 60 * 1000,

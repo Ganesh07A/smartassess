@@ -1,8 +1,15 @@
-import { requireAuth as clerkRequireAuth, clerkClient } from '@clerk/express';
+import { clerkClient, getAuth } from '@clerk/express';
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 
-export const requireAuth = clerkRequireAuth();
+export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  const auth = getAuth(req);
+  if (!auth?.userId) {
+    return res.status(401).json({ error: 'Unauthorized: Authentication required.' });
+  }
+  (req as any).auth = auth;
+  next();
+};
 
 export async function requireTeacher(req: Request, res: Response, next: NextFunction) {
   try {

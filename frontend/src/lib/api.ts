@@ -1,7 +1,17 @@
 import axios from 'axios';
 
+// Dynamically determine the API base URL based on the window location to support LAN testing
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    // If running in browser on LAN, replace the Next.js port (usually 3000) with the backend port (4000)
+    const { hostname, protocol } = window.location;
+    return `${protocol}//${hostname}:4000`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+};
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

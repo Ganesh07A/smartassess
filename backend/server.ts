@@ -10,12 +10,12 @@ import studentRoutes from './src/routes/student';
 const app = express();
 
 
+app.use(securityMiddleware);
+
 app.use(clerkMiddleware({
   publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
   secretKey: process.env.CLERK_SECRET_KEY,
 }));
-
-app.use(securityMiddleware);
 app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 
@@ -37,3 +37,7 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+
+// Trigger reload
+
+// Trigger reload 2

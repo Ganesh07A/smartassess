@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#dbe1ff",
+                        "inverse-primary": "#b4c5ff",
+                        "error": "#ba1a1a",
+                        "outline": "#737686",
+                        "surface-tint": "#0053db",
+                        "surface-container-low": "#f2f3f6",
+                        "tertiary": "#943700",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#00174b",
+                        "secondary": "#495c95",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-bright": "#f8f9fc",
+                        "tertiary-container": "#bc4800",
+                        "on-secondary-fixed-variant": "#31447b",
+                        "primary": "#004ac6",
+                        "inverse-on-surface": "#f0f1f4",
+                        "on-background": "#191c1e",
+                        "surface-container-highest": "#e1e2e5",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fc",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e7e8eb",
+                        "outline-variant": "#c3c6d7",
+                        "on-tertiary-container": "#ffede6",
+                        "background": "#f8f9fc",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-surface": "#191c1e",
+                        "surface-container": "#edeef1",
+                        "on-primary-container": "#eeefff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-primary-fixed": "#00174b",
+                        "surface-variant": "#e1e2e5",
+                        "surface-dim": "#d9dadd",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "secondary-container": "#acbfff",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "inverse-surface": "#2e3133",
+                        "on-secondary-container": "#394c84",
+                        "primary-container": "#2563eb",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-surface-variant": "#434655",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.5rem",
+                        "3xl": "2.25rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Work Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .label-style { font-family: 'Work Sans', sans-serif; }
+        .tap-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
+        
+        /* Mobile-only sticky header adjustments */
+        @media (max-width: 768px) {
+            .mobile-sticky-header {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                background: rgba(248, 249, 252, 0.9);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid rgba(195, 198, 215, 0.3);
+            }
+            .safe-area-top { padding-top: env(safe-area-inset-top); }
+        }
+
+        /* Bottom Sheet Style Modal Mockup */
+        .bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top-left-radius: 2rem;
+            border-top-right-radius: 2rem;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .bottom-sheet.active { transform: translateY(0); }
+        .sheet-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 90;
+        }
+        .sheet-overlay.active { opacity: 1; pointer-events: auto; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar Navigation (Desktop Only) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col py-6 gap-2 z-40 hidden md:flex">
+<div class="px-6 mb-8">
+<h1 class="text-2xl font-black text-blue-700 dark:text-blue-400">SmartAssess</h1>
+<p class="label-style text-[11px] tracking-wider uppercase text-slate-500">Teacher Portal</p>
+</div>
+<nav class="flex flex-col gap-1 px-3">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all duration-300 ease-in-out rounded-xl" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all duration-300 ease-in-out rounded-xl" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-medium">Exams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-300 font-bold border-r-4 border-blue-700 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20 transition-all duration-300 ease-in-out rounded-xl" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-medium">Results</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all duration-300 ease-in-out rounded-xl" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="mobile-sticky-header w-full flex justify-between items-center px-4 md:px-8 h-16 md:pl-72 safe-area-top">
+<div class="flex items-center gap-2">
+<button class="tap-target text-blue-700 font-bold hover:bg-slate-100/50 rounded-lg transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="md:hidden">
+<h1 class="text-sm font-bold truncate max-w-[120px]">Algorithms Final</h1>
+<p class="text-[10px] text-on-surface-variant font-medium">88.4% Pass Rate</p>
+</div>
+<button class="hidden md:flex items-center gap-2 text-blue-700 font-bold hover:bg-slate-100/50 px-3 py-1.5 rounded-lg transition-colors">
+<span class="label-style text-[11px] tracking-wider uppercase">Back to Results</span>
+</button>
+</div>
+<div class="flex items-center gap-2 md:gap-6">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-highest border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary w-48 md:w-64" placeholder="Search students..." type="text"/>
+</div>
+<button class="tap-target text-slate-600 hover:bg-slate-100/50 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-fixed overflow-hidden flex-shrink-0">
+<img alt="Teacher Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfn4AHFK5TFsjSQqCmLR6Vp1DwWzUWSy02qsMn8cpB-Ie3knp3gYdUAuQyb7KVbOMMFOoKzu1L14REgQ-C2ZodwAQFdPabJm0MvEHvHpIQppV4_TD0brsva3p2ph_O0ZWEm1sz9Lq3ectBCihcGUssrRmSsnSup1jEbJmiPWBUxFg_8WG7DJZw8YVNafztbvUMyFT9JRmSEouWVpabVLbkR4aB00K7ZO3yYMOoElakUofc6JwA42Je0s6WvQtuL6WHO5K9m2tOSLc"/>
+</div>
+</div>
+</header>
+<main class="pt-4 md:pt-8 pb-12 px-4 md:pl-72 md:pr-12 min-h-screen">
+<!-- Desktop Title (Hidden on Mobile) -->
+<section class="mb-8 hidden md:flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-1">
+<h2 class="text-4xl font-extrabold text-on-surface tracking-tight">Exam Leaderboard</h2>
+<p class="text-on-surface-variant font-medium text-lg">Advanced Algorithms Final • Spring 2024</p>
+</div>
+<div class="flex gap-3">
+<button class="tap-target px-6 bg-surface-container-highest text-on-surface font-semibold rounded-xl hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined mr-2">download</span>
+<span>Export CSV</span>
+</button>
+<button class="tap-target px-6 bg-primary text-on-primary font-semibold rounded-xl shadow-lg shadow-primary/20 hover:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined mr-2">share</span>
+<span>Share Report</span>
+</button>
+</div>
+</section>
+<!-- Metrics Horizontal Scroller on Mobile / Bento on Desktop -->
+<section class="flex md:grid md:grid-cols-4 gap-4 md:gap-6 mb-8 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+<div class="min-w-[160px] md:min-w-0 bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm relative overflow-hidden group snap-center border border-outline-variant/10">
+<p class="label-style text-[10px] font-bold tracking-widest uppercase text-outline mb-1">Total Attempts</p>
+<div class="flex items-end gap-2">
+<h3 class="text-3xl md:text-4xl font-bold text-on-surface">142</h3>
+<span class="text-blue-600 font-bold text-xs mb-1">+12%</span>
+</div>
+</div>
+<div class="min-w-[160px] md:min-w-0 bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm relative overflow-hidden group snap-center border border-outline-variant/10">
+<p class="label-style text-[10px] font-bold tracking-widest uppercase text-outline mb-1">Pass Rate</p>
+<div class="flex items-end gap-2">
+<h3 class="text-3xl md:text-4xl font-bold text-on-surface">88.4%</h3>
+<span class="text-emerald-600 font-bold text-xs mb-1">Stable</span>
+</div>
+</div>
+<div class="min-w-[160px] md:min-w-0 bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm relative overflow-hidden group snap-center border border-outline-variant/10">
+<p class="label-style text-[10px] font-bold tracking-widest uppercase text-outline mb-1">Avg Time</p>
+<div class="flex items-end gap-2">
+<h3 class="text-3xl md:text-4xl font-bold text-on-surface">42m</h3>
+<span class="text-blue-600 font-bold text-xs mb-1">-4m</span>
+</div>
+</div>
+<div class="min-w-[160px] md:min-w-0 bg-surface-container-lowest p-5 md:p-6 rounded-3xl shadow-sm relative overflow-hidden group snap-center border border-tertiary/10">
+<p class="label-style text-[10px] font-bold tracking-widest uppercase text-tertiary mb-1">Avg Tabs</p>
+<div class="flex items-end gap-2">
+<h3 class="text-3xl md:text-4xl font-bold text-on-surface">0.4</h3>
+<span class="text-tertiary font-bold text-xs mb-1">Safe</span>
+</div>
+</div>
+</section>
+<!-- Main List Container -->
+<section class="bg-surface-container-low md:rounded-3xl overflow-hidden p-0.5 md:p-1">
+<div class="bg-surface-container-lowest md:rounded-[1.25rem] overflow-hidden">
+<!-- Toolbar -->
+<div class="px-4 md:px-8 py-4 md:py-6 flex justify-between items-center border-b border-outline-variant/10">
+<div class="flex items-center gap-2 md:gap-6">
+<button class="tap-target flex items-center gap-2 px-3 hover:bg-surface-container-low rounded-xl transition-colors">
+<span class="material-symbols-outlined text-primary">filter_list</span>
+<span class="font-bold text-on-surface-variant text-sm md:text-base">Filter</span>
+</button>
+<div class="h-4 w-px bg-outline-variant hidden md:block"></div>
+<div class="hidden md:flex items-center gap-2">
+<span class="label-style text-[11px] font-semibold text-outline uppercase tracking-wider">Sort: Rank</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<div class="flex md:hidden gap-2">
+<button class="tap-target text-primary hover:bg-primary/10 rounded-full">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="tap-target text-primary hover:bg-primary/10 rounded-full">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Leaderboard Table (Desktop Only) -->
+<div class="hidden md:block overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="label-style text-[11px] font-bold tracking-widest uppercase text-outline bg-surface-container-low/20">
+<th class="px-8 py-5">Rank</th>
+<th class="px-4 py-5">Student</th>
+<th class="px-4 py-5 text-center">Score</th>
+<th class="px-4 py-5 text-center">Percentage</th>
+<th class="px-4 py-5">Status</th>
+<th class="px-4 py-5 text-center">Violations</th>
+<th class="px-8 py-5 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Desktop Row 1 -->
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="px-8 py-5">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-black shadow-lg shadow-primary/30">1</div>
+</td>
+<td class="px-4 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden ring-2 ring-primary ring-offset-2">
+<img alt="Felix" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcjg8fkApE7EiQS1G2POo2q0gZFmCElal9G2dZTcKa4MPMO13ngL3Hi_mzeTVhI8OyjCsIqK12xzgheqJyyeXRVfloToI7nIJHju7OJChlVPgSL2YNBP2NvTljbU0s27F1zQTB8-n23D4_sPqqKS9xdGhk1Hw8y7d9X6_4MCxo3_jaSksWwDjq5t4kwjJL7veZKgR6VvA2611OHf6tphI0hsKPxGcP_gnZlC6QRqfCAD5iRt0Rdvfji_Qj5gCeR3WTrt28wQwCV9k"/>
+</div>
+<div>
+<p class="font-bold text-on-surface">Felix Henderson</p>
+<p class="text-xs text-on-surface-variant">f.henderson@university.edu</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-5 text-center font-bold text-primary">98/100</td>
+<td class="px-4 py-5 text-center">
+<span class="px-3 py-1 bg-primary/10 text-primary rounded-full font-bold text-sm">98%</span>
+</td>
+<td class="px-4 py-5">
+<span class="flex items-center gap-1.5 text-emerald-600 font-bold text-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Pass
+                                </span>
+</td>
+<td class="px-4 py-5 text-center text-outline">0</td>
+<td class="px-8 py-5 text-right">
+<button class="tap-target text-primary font-bold text-sm hover:underline underline-offset-4 ml-auto">View Submission</button>
+</td>
+</tr>
+<!-- Repeat desktop rows as needed based on source logic -->
+</tbody>
+</table>
+</div>
+<!-- Submission Cards (Mobile Only) -->
+<div class="md:hidden divide-y divide-outline-variant/10">
+<!-- Mobile Card 1 -->
+<div class="p-4 flex flex-col gap-4 active:bg-surface-container-low transition-colors" onclick="toggleBottomSheet(true)">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden ring-2 ring-primary ring-offset-2">
+<img alt="Felix" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcjg8fkApE7EiQS1G2POo2q0gZFmCElal9G2dZTcKa4MPMO13ngL3Hi_mzeTVhI8OyjCsIqK12xzgheqJyyeXRVfloToI7nIJHju7OJChlVPgSL2YNBP2NvTljbU0s27F1zQTB8-n23D4_sPqqKS9xdGhk1Hw8y7d9X6_4MCxo3_jaSksWwDjq5t4kwjJL7veZKgR6VvA2611OHf6tphI0hsKPxGcP_gnZlC6QRqfCAD5iRt0Rdvfji_Qj5gCeR3WTrt28wQwCV9k"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-on-primary text-[10px] font-black flex items-center justify-center border-2 border-surface">1</div>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Felix Henderson</h4>
+<p class="text-xs text-on-surface-variant">98/100 • 98%</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase tracking-wide">Pass</span>
+</div>
+<div class="flex justify-between items-center text-sm font-medium">
+<div class="flex items-center gap-4 text-outline">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">timer</span> 38m</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">flag</span> 0</span>
+</div>
+<button class="tap-target text-primary font-bold text-xs uppercase tracking-widest">Details</button>
+</div>
+</div>
+<!-- Mobile Card 2 -->
+<div class="p-4 flex flex-col gap-4 active:bg-surface-container-low transition-colors" onclick="toggleBottomSheet(true)">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+<img alt="Maya" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsHL2BByJGoOoSOHuB4sFAxmIszgmnEZAT2nMKcS4PISTE-6jfJlxOerik-phyzSwa-7NTBFwcaDqxj4ouJuZ7YMYoIVQxSSHm1NpDyc92dHFYmUIBgPHlKuFGwa93Kg9DaPa317vG9wGSGVPCOMvxQRthDeP8njHavnw5wi-QLR6LbEv4P7b4NyRWgG65ks2VaeCOqC0eK-fPeft_eg9cWz9chFiJdlUHP3GEiuBMoX2AH9uNYLgIDodX-9ZFT3AYMYNvRDL9AyY"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-200 text-on-surface text-[10px] font-black flex items-center justify-center border-2 border-surface">2</div>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Maya Sterling</h4>
+<p class="text-xs text-on-surface-variant">95/100 • 95%</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase tracking-wide">Pass</span>
+</div>
+<div class="flex justify-between items-center text-sm font-medium">
+<div class="flex items-center gap-4 text-outline">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">timer</span> 45m</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">flag</span> 0</span>
+</div>
+<button class="tap-target text-primary font-bold text-xs uppercase tracking-widest">Details</button>
+</div>
+</div>
+<!-- Mobile Card 12 (Violation) -->
+<div class="p-4 flex flex-col gap-4 bg-tertiary-container/5 active:bg-tertiary-container/10 transition-colors" onclick="toggleBottomSheet(true)">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+<img alt="Sarah" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdzqlP9rEdeOc7hlBQntl_9tRQXhpUtNz6r9IegTDY-13rBaQ-O3Q0fpkggHCso-65CmGdbpwEZmlVUNF5eJWRaz7gSh6xWmARrHPhN8E8XXgHSwTLGZBx0tG2rDjtN9UONaMEnsvZ3g6-JpukosPw6Ds6rlS2rfPLFYio7bMDOBWZTJmct2hHjV_G5EpNfeOVMFsLRm_4WxdTcH5MYMfyoPajBiKQXtmiZ1THoc4C-dtfEAhN0D8WYSMRtPN0_wIqgh1o9QsdVD0"/>
+</div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-outline-variant text-on-surface text-[10px] font-black flex items-center justify-center border-2 border-surface">12</div>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-tight">Sarah Connor</h4>
+<p class="text-xs text-on-surface-variant">64/100 • 64%</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded text-[10px] font-bold uppercase tracking-wide">Probation</span>
+</div>
+<div class="flex justify-between items-center text-sm font-medium">
+<div class="flex items-center gap-4 text-tertiary">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-lg">warning</span> 4 Violations</span>
+</div>
+<button class="tap-target text-primary font-bold text-xs uppercase tracking-widest">Details</button>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="px-4 md:px-8 py-4 md:py-6 flex flex-col md:flex-row justify-between items-center gap-4 bg-surface-container-low/20">
+<p class="text-sm text-on-surface-variant font-medium">Showing <span class="font-bold text-on-surface">1 - 25</span> of 142</p>
+<div class="flex gap-1 md:gap-2">
+<button class="tap-target w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="tap-target w-10 h-10 rounded-xl bg-primary text-on-primary font-bold">1</button>
+<button class="tap-target w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant">2</button>
+<button class="tap-target w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant">3</button>
+<button class="tap-target w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant hover:bg-primary hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Sheet Actions for Mobile -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="toggleBottomSheet(false)"></div>
+<div class="bottom-sheet" id="bottomSheet">
+<div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-4"></div>
+<div class="px-6 pb-12">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden ring-4 ring-primary-fixed">
+<img alt="Felix" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcjg8fkApE7EiQS1G2POo2q0gZFmCElal9G2dZTcKa4MPMO13ngL3Hi_mzeTVhI8OyjCsIqK12xzgheqJyyeXRVfloToI7nIJHju7OJChlVPgSL2YNBP2NvTljbU0s27F1zQTB8-n23D4_sPqqKS9xdGhk1Hw8y7d9X6_4MCxo3_jaSksWwDjq5t4kwjJL7veZKgR6VvA2611OHf6tphI0hsKPxGcP_gnZlC6QRqfCAD5iRt0Rdvfji_Qj5gCeR3WTrt28wQwCV9k"/>
+</div>
+<div>
+<h3 class="text-2xl font-black text-on-surface">Felix Henderson</h3>
+<p class="text-on-surface-variant">f.henderson@university.edu</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-surface-container-low p-4 rounded-2xl">
+<p class="label-style text-[10px] font-bold text-outline uppercase mb-1">Final Score</p>
+<p class="text-2xl font-bold text-primary">98/100</p>
+</div>
+<div class="bg-surface-container-low p-4 rounded-2xl">
+<p class="label-style text-[10px] font-bold text-outline uppercase mb-1">Pass Status</p>
+<p class="text-xl font-bold text-emerald-600">PASSED</p>
+</div>
+</div>
+<div class="space-y-3">
+<button class="tap-target w-full bg-primary text-on-primary font-bold rounded-2xl shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined mr-2">visibility</span>
+                View Full Submission
+            </button>
+<button class="tap-target w-full bg-surface-container-highest text-on-surface font-bold rounded-2xl">
+<span class="material-symbols-outlined mr-2">history</span>
+                Exam Logs
+            </button>
+<button class="tap-target w-full bg-surface-container-highest text-on-surface font-bold rounded-2xl">
+<span class="material-symbols-outlined mr-2">mail</span>
+                Contact Student
+            </button>
+<button class="tap-target w-full text-error font-bold rounded-2xl border border-error/20" onclick="toggleBottomSheet(false)">
+                Cancel
+            </button>
+</div>
+</div>
+</div>
+<script>
+    function toggleBottomSheet(show) {
+        const sheet = document.getElementById('bottomSheet');
+        const overlay = document.getElementById('sheetOverlay');
+        if (show) {
+            sheet.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            sheet.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+</script>
+</body></html>

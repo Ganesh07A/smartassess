@@ -64,7 +64,7 @@ export default function TeacherDashboard() {
           
           {/* Footer Branding */}
           <footer className="mt-20 pt-10 border-t border-gray-100/50 flex items-center justify-between opacity-50 transition-opacity hover:opacity-100">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-none">SmartAssess &copy; 2023 // All rights reserved</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-none">SmartAssess &copy; 2026 // All rights reserved</p>
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
               <p className="text-xs font-bold text-blue-600 uppercase tracking-widest leading-none underline decoration-blue-200 underline-offset-4">Privacy Policy</p>

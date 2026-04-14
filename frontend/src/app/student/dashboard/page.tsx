@@ -8,6 +8,7 @@ import {
 import { Sidebar } from '@/components/teacher/dashboard/Sidebar';
 import { Header } from '@/components/teacher/dashboard/Header';
 import { studentApi, StudentExam } from '@/lib/api/studentApi';
+import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
@@ -45,9 +46,24 @@ export default function StudentDashboard() {
              
              {/* Hero / Welcome */}
              <div className="relative p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white overflow-hidden shadow-2xl shadow-blue-200">
-                <div className="relative z-10">
-                  <h1 className="text-3xl font-black tracking-tight mb-2">Welcome back!</h1>
-                  <p className="text-blue-100 font-medium max-w-md">You have {activeExams.length} active assessments waiting for you. Ready to excel?</p>
+                <div className="relative z-10 flex justify-between items-start">
+                  <div>
+                    <h1 className="text-3xl font-black tracking-tight mb-2">Welcome back!</h1>
+                    <p className="text-blue-100 font-medium max-w-md">You have {activeExams.length} active assessments waiting for you. Ready to excel?</p>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await api.post('/api/auth/set-role', { role: 'teacher' });
+                        window.location.href = '/teacher/dashboard';
+                      } catch (err: any) {
+                        toast.error(err?.displayMessage || err?.response?.data?.error || err.message || 'Failed to switch role');
+                      }
+                    }}
+                    className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl font-bold text-sm shadow-sm transition-all"
+                  >
+                    Switch to Teacher Dashboard
+                  </button>
                 </div>
                 <div className="absolute right-[-10%] bottom-[-20%] opacity-10">
                   <FileText className="w-64 h-64" />

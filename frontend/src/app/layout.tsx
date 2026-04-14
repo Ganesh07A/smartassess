@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "react-hot-toast";
@@ -13,8 +13,13 @@ export const metadata: Metadata = {
   title: "SmartAssess",
   description: "Premium Online Examination Platform",
   manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
   themeColor: "#2463eb",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -27,9 +32,9 @@ export default function RootLayout({
       <html
         lang="en"
         className={`${inter.variable} h-full antialiased`}
+        suppressHydrationWarning
       >
-
-        <body className="min-h-full flex flex-col">
+        <body className="min-h-full flex flex-col" suppressHydrationWarning>
           {children}
           <Toaster
             position="top-right"

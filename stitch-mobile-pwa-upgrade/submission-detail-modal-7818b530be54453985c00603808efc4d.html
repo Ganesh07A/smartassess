@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#dbe1ff",
+                        "inverse-primary": "#b4c5ff",
+                        "error": "#ba1a1a",
+                        "outline": "#737686",
+                        "surface-tint": "#0053db",
+                        "surface-container-low": "#f2f3f6",
+                        "tertiary": "#943700",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#00174b",
+                        "secondary": "#495c95",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-bright": "#f8f9fc",
+                        "tertiary-container": "#bc4800",
+                        "on-secondary-fixed-variant": "#31447b",
+                        "primary": "#004ac6",
+                        "inverse-on-surface": "#f0f1f4",
+                        "on-background": "#191c1e",
+                        "surface-container-highest": "#e1e2e5",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9fc",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e7e8eb",
+                        "outline-variant": "#c3c6d7",
+                        "on-tertiary-container": "#ffede6",
+                        "background": "#f8f9fc",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-surface": "#191c1e",
+                        "surface-container": "#edeef1",
+                        "on-primary-container": "#eeefff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#b4c5ff",
+                        "on-primary-fixed": "#00174b",
+                        "surface-variant": "#e1e2e5",
+                        "surface-dim": "#d9dadd",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "secondary-container": "#acbfff",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "inverse-surface": "#2e3133",
+                        "on-secondary-container": "#394c84",
+                        "primary-container": "#2563eb",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "on-surface-variant": "#434655",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.5rem",
+                        "3xl": "2rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Work Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .font-label { font-family: 'Work Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm flex justify-between items-center px-8 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-blue-800 dark:text-blue-300 font-headline">SmartAssess</span>
+<div class="hidden md:flex items-center ml-8 gap-6 h-full">
+<a class="text-slate-600 dark:text-slate-400 font-label tracking-wider uppercase text-[11px] hover:bg-slate-100/50 transition-colors px-3 py-1 rounded-lg" href="#">Dashboard</a>
+<a class="text-blue-700 dark:text-blue-400 font-bold font-label tracking-wider uppercase text-[11px] px-3 py-1 bg-blue-50/50 rounded-lg" href="#">Exams</a>
+<a class="text-slate-600 dark:text-slate-400 font-label tracking-wider uppercase text-[11px] hover:bg-slate-100/50 transition-colors px-3 py-1 rounded-lg" href="#">Results</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-600 hover:bg-slate-100/50 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant/30">
+<img alt="Teacher Profile" data-alt="Professional teacher profile portrait with soft natural lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMvULaCI74vvIdQGzc1jE8h749UXCXAIzgFRL7a9RJ57JpqShZqgjgZd_ZcpmSlRaudTYAkAFLH0j8r-ayUAV5Oib1myEvNbfSXAIlkH7qPBJ-DO2E9ONkFMPiqDiCePULBmH4bLOHlcmnvPAUwPltRpXl8xbiS06tYNR3suv4C_45BtJF645J4LeGR0SArpe2b4YQ2EL-vjI0YyxmNgMVcQf-S3grjLnb-UNeYnFtq9-bZw4nmocM0EwkyfDYEM1w-iY1xcxbtxE"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas (Mock Background) -->
+<main class="pt-24 px-8 pb-12 max-w-7xl mx-auto">
+<div class="flex justify-between items-center mb-8">
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface">Submissions Audit</h1>
+<div class="bg-surface-container-high px-4 py-2 rounded-2xl flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span class="text-sm font-medium">Filter Results</span>
+</div>
+</div>
+<!-- Bento Grid Layout for Background Context -->
+<div class="grid grid-cols-12 gap-6 opacity-40 select-none pointer-events-none">
+<div class="col-span-8 bg-surface-container-lowest rounded-3xl p-6 h-64"></div>
+<div class="col-span-4 bg-surface-container-lowest rounded-3xl p-6 h-64"></div>
+<div class="col-span-4 bg-surface-container-lowest rounded-3xl p-6 h-96"></div>
+<div class="col-span-8 bg-surface-container-lowest rounded-3xl p-6 h-96"></div>
+</div>
+</main>
+<!-- Submission Detail Modal Backdrop -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 overflow-hidden bg-on-surface/10 backdrop-blur-md">
+<!-- Modal Container -->
+<div class="bg-surface-container-lowest w-full max-w-5xl h-full max-h-[921px] rounded-3xl shadow-[0_40px_60px_-15px_rgba(25,28,30,0.08)] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+<!-- Modal Header -->
+<div class="p-8 pb-6 flex items-start justify-between bg-surface-container-low/30">
+<div class="flex gap-5">
+<div class="h-16 w-16 rounded-2xl overflow-hidden shadow-sm">
+<img alt="Marcus Thompson Profile" data-alt="Portrait of a male student looking thoughtful in a bright academic setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe01YK1FHUpXCfQTHLemfZOje89vlpvo0dPzv8xo6ylIsMbdrwEkNDXX5bWeH_TCLaUV3ubd1zuvdxM2yOtKG1Lwnp7XZD7kXMs-x-kzdL7vS5YeSjttCjU-vqAmzvn5dH_g1wG8dDSOyVeAiU8-FsmHXw2EOuJFYNY844Oxu45W5EkChqB0izGktEGLZPUXyLJB7_6Rv8BygxlLDy3h55Mrwyd2N5rJcXhjwlOQzlbkMdFMeTxgIqv7xkP5IWLF93ajMnDvTrRAE"/>
+</div>
+<div>
+<h2 class="text-2xl font-bold font-headline text-on-surface">Marcus Thompson</h2>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-sm text-on-surface-variant font-label tracking-wide uppercase">ID: ST-88291</span>
+<span class="h-1 w-1 bg-outline-variant rounded-full"></span>
+<span class="text-sm text-on-surface-variant">Submitted Oct 24, 2023 • 14:32 PM</span>
+</div>
+<div class="mt-3">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold font-label uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                Graded
+                            </span>
+</div>
+</div>
+</div>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-all duration-200">
+<span class="material-symbols-outlined text-on-surface-variant">close</span>
+</button>
+</div>
+<!-- Performance Summary Bar -->
+<div class="px-8 pb-8 pt-2 grid grid-cols-4 gap-6 border-b border-outline-variant/10">
+<div class="bg-primary/5 p-5 rounded-2xl">
+<p class="text-[10px] font-label font-bold text-primary tracking-widest uppercase mb-1">Final Score</p>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-black font-headline text-primary">88</span>
+<span class="text-primary/60 font-medium">/ 100</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-5 rounded-2xl">
+<p class="text-[10px] font-label font-bold text-on-surface-variant tracking-widest uppercase mb-1">Percentage</p>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-black font-headline text-on-surface">88.0%</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-5 rounded-2xl">
+<p class="text-[10px] font-label font-bold text-on-surface-variant tracking-widest uppercase mb-1">Outcome</p>
+<div class="flex items-center gap-2">
+<span class="text-3xl font-black font-headline text-on-surface">PASS</span>
+<span class="material-symbols-outlined text-green-600" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-5 rounded-2xl">
+<p class="text-[10px] font-label font-bold text-on-surface-variant tracking-widest uppercase mb-1">Time Taken</p>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-black font-headline text-on-surface">42</span>
+<span class="text-on-surface-variant font-medium">min</span>
+</div>
+</div>
+</div>
+<!-- Tab Navigation -->
+<div class="px-8 flex gap-8 border-b border-outline-variant/5">
+<button class="py-4 border-b-2 border-primary text-primary font-bold text-sm tracking-tight transition-all">Question Breakdown</button>
+<button class="py-4 text-on-surface-variant/60 hover:text-primary font-medium text-sm tracking-tight transition-all">Integrity &amp; Proctoring</button>
+<button class="py-4 text-on-surface-variant/60 hover:text-primary font-medium text-sm tracking-tight transition-all">Raw Response Data</button>
+</div>
+<!-- Scrollable Content Body -->
+<div class="flex-1 overflow-y-auto p-8 space-y-8 bg-surface-bright">
+<!-- Question 1: MCQ (Correct) -->
+<div class="relative bg-surface-container-lowest rounded-3xl p-6 shadow-sm ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<span class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-sm font-bold">1</span>
+<span class="text-xs font-label font-bold tracking-widest uppercase text-on-surface-variant/60">Multiple Choice</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold font-label uppercase tracking-wide">Correct</span>
+<span class="text-xs font-bold text-on-surface-variant">5/5 Marks</span>
+</div>
+</div>
+<p class="text-lg font-bold font-headline text-on-surface mb-6 leading-snug">Which of the following data structures follows the Last-In-First-Out (LIFO) principle?</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/10">
+<span class="block text-[10px] font-label font-bold text-on-surface-variant/50 uppercase tracking-widest mb-1">Student Answer</span>
+<p class="font-semibold text-on-surface">Stack</p>
+</div>
+<div class="p-4 rounded-2xl bg-green-50 border border-green-200">
+<span class="block text-[10px] font-label font-bold text-green-600/70 uppercase tracking-widest mb-1">Correct Answer</span>
+<p class="font-semibold text-green-800">Stack</p>
+</div>
+</div>
+</div>
+<!-- Question 2: Coding (Partial) -->
+<div class="relative bg-surface-container-lowest rounded-3xl p-6 shadow-sm ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<span class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-sm font-bold">2</span>
+<span class="text-xs font-label font-bold tracking-widest uppercase text-on-surface-variant/60">Coding Challenge</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold font-label uppercase tracking-wide">Partial</span>
+<span class="text-xs font-bold text-on-surface-variant">12/20 Marks</span>
+</div>
+</div>
+<p class="text-lg font-bold font-headline text-on-surface mb-6 leading-snug">Implement a function to reverse a linked list in-place.</p>
+<div class="space-y-4">
+<div class="bg-on-surface rounded-2xl p-5 overflow-hidden">
+<span class="block text-[10px] font-label font-bold text-white/40 uppercase tracking-widest mb-3">Submitted Code (Python)</span>
+<pre class="text-sm text-primary-fixed leading-relaxed font-mono"><code>def reverse_list(head):
+    prev = None
+    current = head
+    while current:
+        next_node = current.next
+        current.next = prev
+        prev = current
+        current = next_node
+    # Missing return statement logic
+    # return prev</code></pre>
+</div>
+<div class="p-4 rounded-2xl bg-tertiary-container/10 border border-tertiary-container/20">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary mt-0.5">feedback</span>
+<div>
+<p class="text-sm font-bold text-on-surface">Auto-Grader Comment</p>
+<p class="text-sm text-on-surface-variant">Logic is correct, but function fails to return the new head. Test cases for empty lists passed, but structural tests failed at tail node.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Question 3: MCQ (Incorrect) -->
+<div class="relative bg-surface-container-lowest rounded-3xl p-6 shadow-sm ring-1 ring-black/5">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-3">
+<span class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-high text-sm font-bold">3</span>
+<span class="text-xs font-label font-bold tracking-widest uppercase text-on-surface-variant/60">Multiple Choice</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold font-label uppercase tracking-wide">Incorrect</span>
+<span class="text-xs font-bold text-on-surface-variant">0/5 Marks</span>
+</div>
+</div>
+<p class="text-lg font-bold font-headline text-on-surface mb-6 leading-snug">What is the average time complexity of searching in a Hash Map?</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="p-4 rounded-2xl bg-error-container/20 border border-error/10">
+<span class="block text-[10px] font-label font-bold text-error uppercase tracking-widest mb-1">Student Answer</span>
+<p class="font-semibold text-error">O(log n)</p>
+</div>
+<div class="p-4 rounded-2xl bg-green-50 border border-green-200">
+<span class="block text-[10px] font-label font-bold text-green-600/70 uppercase tracking-widest mb-1">Correct Answer</span>
+<p class="font-semibold text-green-800">O(1)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Footer Controls -->
+<div class="p-6 border-t border-outline-variant/10 flex justify-between items-center bg-surface-container-low/30">
+<div class="flex gap-4">
+<button class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary text-white font-bold text-sm shadow-[0_4px_12px_rgba(0,74,198,0.2)] hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined text-sm">print</span>
+                        Export Report
+                    </button>
+<button class="flex items-center gap-2 px-6 py-2.5 rounded-full border border-outline-variant text-on-surface font-bold text-sm hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+                        Override Grade
+                    </button>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary hover:bg-primary/5 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<span class="text-xs font-label font-bold tracking-widest uppercase text-on-surface-variant">Student 12 of 48</span>
+<button class="text-primary hover:bg-primary/5 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SideNavBar (Shared Component - Hidden in Modal Focus but defined for structure) -->
+<aside class="hidden xl:flex h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex-col py-6 gap-2 z-40">
+<div class="px-6 mb-8">
+<h1 class="text-2xl font-black text-blue-700 dark:text-blue-400 font-headline">SmartAssess</h1>
+<p class="text-[11px] font-label uppercase tracking-widest text-slate-500">Teacher Portal</p>
+</div>
+<nav class="flex-1 px-4">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 font-medium hover:bg-slate-100 transition-all rounded-xl" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 font-bold bg-blue-50/50 border-r-4 border-blue-700 transition-all rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="text-sm">Exams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 font-medium hover:bg-slate-100 transition-all rounded-xl" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm">Results</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 font-medium hover:bg-slate-100 transition-all rounded-xl" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</div>
+</nav>
+</aside>
+</body></html>
