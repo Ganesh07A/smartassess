@@ -8,8 +8,23 @@ import { LivePerformance } from '@/components/teacher/dashboard/LivePerformance'
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useUser } from  "@clerk/nextjs";
+
+
+
 
 export default function TeacherDashboard() {
+
+   const { user, isLoaded } = useUser();
+
+  // 👇 ADD THIS TEMPORARILY
+  if (isLoaded) {
+    console.log("=== DEBUG ===");
+    console.log("Email:", user?.emailAddresses[0]?.emailAddress);
+    console.log("Public Metadata:", user?.publicMetadata);
+    console.log("Role:", user?.publicMetadata?.role);
+    console.log("=============");
+  }
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (

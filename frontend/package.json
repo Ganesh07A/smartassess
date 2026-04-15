@@ -10,7 +10,6 @@
     "lint:changed": "eslint src/app/student/exams/[examId]/attempt/page.tsx src/lib/api/studentApi.ts",
     "ci": "npm run lint:changed"
   },
-
   "dependencies": {
     "@clerk/nextjs": "^7.0.12",
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -23,6 +22,7 @@
     "react-hook-form": "^7.72.1",
     "react-hot-toast": "^2.6.0",
     "recharts": "^3.8.1",
+    "svix": "^1.90.0",
     "swr": "^2.4.1",
     "zod": "^4.3.6"
   },

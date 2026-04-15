@@ -169,7 +169,7 @@ export default function TeacherResultsOverviewPage() {
                             <div className="flex items-center gap-3">
                               <span className="font-bold text-primary">{exam.passPercent}%</span>
                               <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="bg-primary h-full rounded-full" style={{ width: \`\${exam.passPercent}%\` }}></div>
+                                <div className="bg-primary h-full rounded-full" style={{ width:`${exam.passPercent}%` }}></div>
                               </div>
                             </div>
                           </td>
