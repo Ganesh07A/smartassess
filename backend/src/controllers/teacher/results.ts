@@ -1,8 +1,24 @@
 import { NextFunction, Request, Response } from 'express';
+import { clerkClient } from '@clerk/express';
 import prisma from '../../lib/prisma';
 
 async function getTeacherId(clerkId: string): Promise<string | null> {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  let user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) {
+    try {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      user = await prisma.user.create({
+        data: {
+          clerkId,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Unknown',
+          role: 'TEACHER'
+        }
+      });
+    } catch (err) {
+      console.error('Failed to create teacher locally:', err);
+    }
+  }
   return user?.id ?? null;
 }
 
@@ -18,7 +34,7 @@ export async function listExamResults(req: Request, res: Response, next: NextFun
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const examId = req.params.id;
+    const examId = req.params.id as string;
     const owned = await assertExamOwnership(examId, teacherId);
     if (owned === null) return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
@@ -96,7 +112,7 @@ export async function getSubmissionDetail(req: Request, res: Response, next: Nex
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const submissionId = req.params.submissionId;
+    const submissionId = req.params.submissionId as string;
     const submission = await prisma.result.findUnique({
       where: { id: submissionId },
       include: {
@@ -126,7 +142,7 @@ export async function getExamAnalytics(req: Request, res: Response, next: NextFu
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const examId = req.params.id;
+    const examId = req.params.id as string;
     const owned = await assertExamOwnership(examId, teacherId);
     if (owned === null) return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
@@ -188,7 +204,7 @@ export async function exportExamResults(req: Request, res: Response, next: NextF
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const examId = req.params.id;
+    const examId = req.params.id as string;
     const owned = await assertExamOwnership(examId, teacherId);
     if (owned === null) return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });

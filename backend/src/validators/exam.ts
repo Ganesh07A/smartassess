@@ -20,6 +20,7 @@ export const QuestionSchema = z.object({
   mcqOptions: z.array(McqOptionSchema).optional(),
   testCases:  z.array(TestCaseSchema).optional(),
 });
+export const BulkQuestionSchema = z.array(QuestionSchema).min(1, 'Must provide at least one question');
 
 export const CreateExamSchema = z.object({
   title:       z.string().min(3, 'Title must be at least 3 characters').max(200),

@@ -22,7 +22,8 @@ export async function getTeacherStats(req: Request, res: Response, next: NextFun
       prisma.result.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
-        where: { exam: { teacherId }, status: 'SUBMITTED' },
+        where: { 
+  exam: { teacherId }, status: { in: ['SUBMITTED', 'GRADED'] } },
         include: {
           student: { select: { name: true, email: true } },
           exam:    { select: { title: true } },
@@ -31,7 +32,7 @@ export async function getTeacherStats(req: Request, res: Response, next: NextFun
 
       // All results for score calculation
       prisma.result.findMany({
-        where: { exam: { teacherId }, status: 'SUBMITTED' },
+        where: { exam: { teacherId }, status: { in: ['SUBMITTED', 'GRADED'] } },
         select: { percentage: true, studentId: true },
       }),
 

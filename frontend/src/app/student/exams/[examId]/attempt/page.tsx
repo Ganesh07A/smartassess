@@ -302,15 +302,15 @@ export default function ExamAttemptPage() {
                           key={opt.id}
                           onClick={() => updateAnswer(currentQ.id, { type: 'MCQ', optionId: opt.id })}
                           className={`p-6 rounded-[1.5rem] border-2 text-left transition-all flex items-center gap-4 ${
-                            answers[currentQ.id]?.optionId === opt.id 
+                            (answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id 
                              ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-50' 
                              : 'bg-white border-slate-100 hover:border-slate-200 text-slate-600'
                           }`}
                         >
                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                             answers[currentQ.id]?.optionId === opt.id ? 'bg-blue-600 border-blue-600' : 'border-slate-200'
+                             (answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id ? 'bg-blue-600 border-blue-600' : 'border-slate-200'
                            }`}>
-                              {answers[currentQ.id]?.optionId === opt.id && <CheckCircle className="w-4 h-4 text-white" />}
+                              {(answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id && <CheckCircle className="w-4 h-4 text-white" />}
                            </div>
                            <span className="text-sm font-bold tracking-tight">{opt.text}</span>
                         </button>
@@ -332,7 +332,7 @@ export default function ExamAttemptPage() {
                          </div>
                          <textarea 
                            spellCheck={false}
-                           value={answers[currentQ.id]?.code || ''}
+                           value={(answers[currentQ.id] as { type: 'CODING'; code: string } | undefined)?.code || ''}
                            onChange={(e) => updateAnswer(currentQ.id, { type: 'CODING', code: e.target.value })}
                            className="flex-1 bg-transparent p-8 text-white font-mono text-sm outline-none resize-none leading-relaxed placeholder:text-slate-700"
                            placeholder="// Type your code solution here..."

@@ -3,13 +3,19 @@ import { NextFunction, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  
+  if (req.query.token) {
+    req.headers.authorization = `Bearer ${req.query.token}`;
+  }
+  
   const auth = getAuth(req);
   if (!auth?.userId) {
-    return res.status(401).json({ error: 'Unauthorized: Authentication required.' });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
   (req as any).auth = auth;
   next();
 };
+
 
 export async function requireTeacher(req: Request, res: Response, next: NextFunction) {
   try {

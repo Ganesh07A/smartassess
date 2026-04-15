@@ -1,10 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
+import { clerkClient } from '@clerk/express';
 import prisma from '../../lib/prisma';
-import { CreateExamSchema, UpdateExamSchema, QuestionSchema } from '../../validators/exam';
+import { CreateExamSchema, UpdateExamSchema, QuestionSchema, BulkQuestionSchema } from '../../validators/exam';
 
 // Helper: resolve teacher DB id from Clerk ID
 async function getTeacherId(clerkId: string): Promise<string | null> {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  let user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) {
+    try {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      user = await prisma.user.create({
+        data: {
+          clerkId,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Unknown',
+          role: 'TEACHER'
+        }
+      });
+    } catch (err) {
+      console.error('Failed to create teacher locally:', err);
+    }
+  }
   return user?.id ?? null;
 }
 
@@ -88,12 +104,12 @@ export async function getExam(req: Request, res: Response, next: NextFunction) {
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const exam = await verifyOwnership(req.params.id, teacherId);
+    const exam = await verifyOwnership(req.params.id as string, teacherId);
     if (exam === null)  return res.status(404).json({ error: 'Exam not found' });
     if (exam === false) return res.status(403).json({ error: 'Forbidden' });
 
     const fullExam = await prisma.exam.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: {
         questions: {
           orderBy: { order: 'asc' },
@@ -117,14 +133,14 @@ export async function updateExam(req: Request, res: Response, next: NextFunction
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
     const data = UpdateExamSchema.parse(req.body);
 
     const exam = await prisma.exam.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: {
         ...data,
         startTime: data.startTime ? new Date(data.startTime) : undefined,
@@ -146,11 +162,11 @@ export async function deleteExam(req: Request, res: Response, next: NextFunction
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
-    await prisma.exam.delete({ where: { id: req.params.id } });
+    await prisma.exam.delete({ where: { id: req.params.id as string } });
     return res.json({ success: true });
   } catch (err) {
     next(err);
@@ -165,7 +181,7 @@ export async function publishExam(req: Request, res: Response, next: NextFunctio
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
     if (owned.status !== 'DRAFT') {
@@ -173,7 +189,7 @@ export async function publishExam(req: Request, res: Response, next: NextFunctio
     }
 
     const exam = await prisma.exam.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: { status: 'PUBLISHED' },
     });
 
@@ -191,13 +207,13 @@ export async function duplicateExam(req: Request, res: Response, next: NextFunct
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
     // Deep-clone exam with all questions
     const source = await prisma.exam.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: { questions: { include: { mcqOptions: true, testCases: true } } },
     });
 
@@ -240,7 +256,7 @@ export async function addQuestion(req: Request, res: Response, next: NextFunctio
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
@@ -248,7 +264,7 @@ export async function addQuestion(req: Request, res: Response, next: NextFunctio
 
     const question = await prisma.question.create({
       data: {
-        examId: req.params.id,
+        examId: req.params.id as string,
         type: data.type,
         text: data.text,
         marks: data.marks,
@@ -271,6 +287,49 @@ export async function addQuestion(req: Request, res: Response, next: NextFunctio
 }
 
 // ───────────────────────────────────────────────
+// POST /api/teacher/exams/:id/questions/bulk
+// ───────────────────────────────────────────────
+export async function addQuestionsBulk(req: Request, res: Response, next: NextFunction) {
+  try {
+    const teacherId = await getTeacherId(req.auth.userId);
+    if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
+
+    const examId = req.params.id as string;
+    const owned = await verifyOwnership(examId, teacherId);
+    if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
+    if (owned === false) return res.status(403).json({ error: 'Forbidden' });
+
+    const incomingQuestions = BulkQuestionSchema.parse(req.body);
+
+    const questions = await prisma.$transaction(
+      incomingQuestions.map(data => 
+        prisma.question.create({
+          data: {
+            examId,
+            type: data.type,
+            text: data.text,
+            marks: data.marks,
+            difficulty: data.difficulty,
+            order: data.order,
+            mcqOptions: data.type === 'MCQ' && data.mcqOptions ? {
+              create: data.mcqOptions.map(opt => ({ text: opt.text, isCorrect: opt.isCorrect }))
+            } : undefined,
+            testCases: data.type === 'CODING' && data.testCases ? {
+              create: data.testCases.map(tc => ({ input: tc.input, expectedOutput: tc.expectedOutput, isVisible: tc.isVisible }))
+            } : undefined,
+          },
+          include: { mcqOptions: true, testCases: true },
+        })
+      )
+    );
+
+    return res.status(201).json(questions);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ───────────────────────────────────────────────
 // PUT /api/teacher/exams/:id/questions/:qid
 // ───────────────────────────────────────────────
 export async function updateQuestion(req: Request, res: Response, next: NextFunction) {
@@ -278,7 +337,7 @@ export async function updateQuestion(req: Request, res: Response, next: NextFunc
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
@@ -286,14 +345,14 @@ export async function updateQuestion(req: Request, res: Response, next: NextFunc
 
     // Delete existing items if new ones are provided (MCQ/Coding)
     if (data.mcqOptions) {
-      await prisma.mcqOption.deleteMany({ where: { questionId: req.params.qid } });
+      await prisma.mcqOption.deleteMany({ where: { questionId: req.params.qid as string } });
     }
     if (data.testCases) {
-      await prisma.testCase.deleteMany({ where: { questionId: req.params.qid } });
+      await prisma.testCase.deleteMany({ where: { questionId: req.params.qid as string } });
     }
 
     const question = await prisma.question.update({
-      where: { id: req.params.qid },
+      where: { id: req.params.qid as string },
       data: {
         text: data.text,
         marks: data.marks,
@@ -323,11 +382,11 @@ export async function deleteQuestion(req: Request, res: Response, next: NextFunc
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
-    await prisma.question.delete({ where: { id: req.params.qid } });
+    await prisma.question.delete({ where: { id: req.params.qid as string } });
     return res.json({ success: true });
   } catch (err) {
     next(err);
@@ -342,7 +401,7 @@ export async function assignStudents(req: Request, res: Response, next: NextFunc
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
@@ -352,8 +411,8 @@ export async function assignStudents(req: Request, res: Response, next: NextFunc
     const assignments = await Promise.all(
       studentIds.map(sid => 
         prisma.examAssignment.upsert({
-          where: { examId_studentId: { examId: req.params.id, studentId: sid } },
-          create: { examId: req.params.id, studentId: sid },
+          where: { examId_studentId: { examId: req.params.id as string, studentId: sid } },
+          create: { examId: req.params.id as string, studentId: sid },
           update: {}, // Do nothing if already assigned
         })
       )
@@ -373,12 +432,12 @@ export async function getAssignments(req: Request, res: Response, next: NextFunc
     const teacherId = await getTeacherId(req.auth.userId);
     if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
 
-    const owned = await verifyOwnership(req.params.id, teacherId);
+    const owned = await verifyOwnership(req.params.id as string, teacherId);
     if (owned === null)  return res.status(404).json({ error: 'Exam not found' });
     if (owned === false) return res.status(403).json({ error: 'Forbidden' });
 
     const assignments = await prisma.examAssignment.findMany({
-      where: { examId: req.params.id },
+      where: { examId: req.params.id as string },
       include: { student: { select: { id: true, name: true, email: true } } },
       orderBy: { assignedAt: 'desc' },
     });

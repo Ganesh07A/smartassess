@@ -9,8 +9,10 @@ export function useTeacherStats() {
     '/api/teacher/stats',
     fetcher,
     {
-      refreshInterval: 30_000,   // poll every 30s for live data
-      revalidateOnFocus: true,
+      refreshInterval: 5 * 60 * 1000, // ✅ poll every 5 minutes
+      revalidateOnFocus: false,        // ✅ don't refetch on tab focus
+      revalidateOnReconnect: false,    // ✅ don't refetch on reconnect
+      dedupingInterval: 60_000,        // ✅ cache for 1 minute
     }
   );
 

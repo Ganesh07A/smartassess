@@ -1,0 +1,4 @@
+Type,Marks,Difficulty,QuestionText,Option1,Option1IsCorrect,Option2,Option2IsCorrect,Option3,Option3IsCorrect,Option4,Option4IsCorrect,TestCase1Input,TestCase1Expected,TestCase1Visible,TestCase2Input,TestCase2Expected,TestCase2Visible
+MCQ,5,EASY,What is 2+2?,3,FALSE,4,TRUE,5,FALSE,6,FALSE,,,,,,
+MCQ,10,MEDIUM,Which of the following is a balanced tree?,AVL Tree,TRUE,Binary Search Tree,FALSE,,,,,
+CODING,20,HARD,Write a function that reverses a string.,,,,,,,,"""hello""","""olleh""",TRUE,"""world""","""dlrow""",FALSE

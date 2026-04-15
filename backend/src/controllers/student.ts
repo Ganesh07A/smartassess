@@ -1,10 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
+import { clerkClient } from '@clerk/express';
 import prisma from '../lib/prisma';
 import { evaluateCodingSubmission } from '../services/judge0';
 
 // Helper: resolve student DB id from Clerk ID
 async function getStudentId(clerkId: string): Promise<string | null> {
-  const user = await prisma.user.findUnique({ where: { clerkId } });
+  let user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) {
+    try {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      user = await prisma.user.create({
+        data: {
+          clerkId,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Unknown',
+          role: 'STUDENT'
+        }
+      });
+    } catch (err) {
+      console.error('Failed to create student locally:', err);
+    }
+  }
   return user?.id || null;
 }
 
@@ -82,13 +98,13 @@ export async function getExamDetails(req: Request, res: Response, next: NextFunc
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    const eligibility = await ensureEligibleExam(req.params.id, studentId);
-    if ('error' in eligibility) {
+    const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
+    if (eligibility.error) {
       return res.status(eligibility.error.status).json({ error: eligibility.error.message });
     }
 
     const exam = await prisma.exam.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: {
         questions: {
           orderBy: { order: 'asc' },
@@ -116,14 +132,14 @@ export async function startAttempt(req: Request, res: Response, next: NextFuncti
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    const eligibility = await ensureEligibleExam(req.params.id, studentId);
-    if ('error' in eligibility) {
+    const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
+    if (eligibility.error) {
       return res.status(eligibility.error.status).json({ error: eligibility.error.message });
     }
 
     // Check if already started
     let result = await prisma.result.findFirst({
-      where: { examId: req.params.id, studentId }
+      where: { examId: req.params.id as string, studentId }
     });
 
     if (result) {
@@ -135,7 +151,7 @@ export async function startAttempt(req: Request, res: Response, next: NextFuncti
 
     result = await prisma.result.create({
       data: {
-        examId: req.params.id,
+        examId: req.params.id as string,
         studentId,
         status: 'IN_PROGRESS',
         maxScore: eligibility.exam.totalMarks,
@@ -156,13 +172,13 @@ export async function saveExamProgress(req: Request, res: Response, next: NextFu
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    const eligibility = await ensureEligibleExam(req.params.id, studentId);
-    if ('error' in eligibility) {
+    const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
+    if (eligibility.error) {
       return res.status(eligibility.error.status).json({ error: eligibility.error.message });
     }
 
-    const activeAttempt = await ensureActiveAttempt(req.params.id, studentId);
-    if ('error' in activeAttempt) {
+    const activeAttempt = await ensureActiveAttempt(req.params.id as string, studentId);
+    if (activeAttempt.error) {
       return res.status(activeAttempt.error.status).json({ error: activeAttempt.error.message });
     }
 
@@ -204,13 +220,13 @@ export async function reportViolation(req: Request, res: Response, next: NextFun
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    const eligibility = await ensureEligibleExam(req.params.id, studentId);
-    if ('error' in eligibility) {
+    const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
+    if (eligibility.error) {
       return res.status(eligibility.error.status).json({ error: eligibility.error.message });
     }
 
-    const activeAttempt = await ensureActiveAttempt(req.params.id, studentId);
-    if ('error' in activeAttempt) {
+    const activeAttempt = await ensureActiveAttempt(req.params.id as string, studentId);
+    if (activeAttempt.error) {
       return res.status(activeAttempt.error.status).json({ error: activeAttempt.error.message });
     }
 
@@ -256,13 +272,13 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
     const studentId = await getStudentId(req.auth.userId);
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
-    const eligibility = await ensureEligibleExam(req.params.id, studentId);
-    if ('error' in eligibility) {
+    const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
+    if (eligibility.error) {
       return res.status(eligibility.error.status).json({ error: eligibility.error.message });
     }
 
-    const activeAttempt = await ensureActiveAttempt(req.params.id, studentId);
-    if ('error' in activeAttempt) {
+    const activeAttempt = await ensureActiveAttempt(req.params.id as string, studentId);
+    if (activeAttempt.error) {
       return res.status(activeAttempt.error.status).json({ error: activeAttempt.error.message });
     }
 
@@ -273,7 +289,7 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
 
     // Grading Logic
     const exam = await prisma.exam.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: {
         questions: {
           include: { mcqOptions: true, testCases: true }
@@ -290,7 +306,7 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
       if (!studentAnswer || typeof studentAnswer !== 'object') continue;
 
       if (question.type === 'MCQ') {
-        const correctOpt = question.mcqOptions.find(o => o.isCorrect);
+        const correctOpt = question.mcqOptions.find((o: any) => o.isCorrect);
         if (correctOpt && studentAnswer.optionId === correctOpt.id) {
           totalScoreRaw += question.marks;
         }

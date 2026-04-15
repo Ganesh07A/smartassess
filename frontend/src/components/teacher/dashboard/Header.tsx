@@ -43,7 +43,6 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         <div className="flex items-center gap-3">
           <UserButton 
-            afterSignOutUrl="/"
             appearance={{
               elements: {
                 userButtonAvatarBox: "w-10 h-10 rounded-2xl shadow-lg shadow-blue-100",

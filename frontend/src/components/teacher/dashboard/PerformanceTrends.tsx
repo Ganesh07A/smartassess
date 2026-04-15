@@ -43,7 +43,7 @@ export function PerformanceTrends() {
         {isLoading ? (
           <div className="w-full h-full bg-gray-50 animate-pulse rounded-2xl" />
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart
               id="performance-trends-chart"
               data={chartData}
@@ -68,7 +68,7 @@ export function PerformanceTrends() {
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', padding: '12px' }}
                 itemStyle={{ color: '#2563eb', fontWeight: 700, fontSize: '12px' }}
                 wrapperStyle={{ outline: 'none' }}
-                formatter={(v: number) => [`${v} students`, 'Count']}
+                formatter={(v) => [`${v ?? 0} students`, 'Count']}
               />
               <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={isMobile ? 30 : 50}>
                 {chartData.map((entry, index) => (

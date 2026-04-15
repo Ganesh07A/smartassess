@@ -139,7 +139,10 @@ export default function CreateExamPage() {
 
         {/* Main Form Area */}
         <main className="flex-1 relative flex flex-col p-4 sm:p-6 lg:p-10" style={dotGridBg}>
-          <form id="create-exam-form" onSubmit={handleSubmit(onSubmit)}>
+          <form id="create-exam-form" onSubmit={handleSubmit(
+            // @ts-ignore – zod coercion types don't align with RHF SubmitHandler
+            onSubmit
+          )}>
             <div className="max-w-2xl mx-auto w-full space-y-6 lg:mt-6 mb-24">
 
               {/* Basic Details */}

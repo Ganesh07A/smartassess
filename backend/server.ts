@@ -1,3 +1,4 @@
+// backend/server.ts
 import 'dotenv-safe/config';
 import express from 'express';
 import { clerkMiddleware } from '@clerk/express';
@@ -9,14 +10,19 @@ import studentRoutes from './src/routes/student';
 
 const app = express();
 
-
+// ✅ Security first
 app.use(securityMiddleware);
 
+// ✅ Raw body for webhook BEFORE everything else
+app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
+
+// ✅ Clerk middleware
 app.use(clerkMiddleware({
   publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
   secretKey: process.env.CLERK_SECRET_KEY,
 }));
-app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
+
+// ✅ JSON parser
 app.use(express.json({ limit: '10mb' }));
 
 // Health check
@@ -29,15 +35,10 @@ app.use('/api/auth',    authRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/student', studentRoutes);
 
-
-// Global error handler — must be last
+// Global error handler
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
-
-// Trigger reload
-
-// Trigger reload 2

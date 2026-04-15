@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronUp 
 } from 'lucide-react';
 import { Question, QuestionPayload, examApi } from '@/lib/api/examApi';
+import { BulkUpload } from './BulkUpload';
 import toast from 'react-hot-toast';
 
 interface QuestionBuilderProps {
@@ -18,6 +19,8 @@ export function QuestionBuilder({ examId, initialQuestions, onUpdate }: Question
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'MANUAL' | 'BULK'>('MANUAL');
+  const [isUploading, setIsUploading] = useState(false);
   
   // Form State
   const [type, setType] = useState<'MCQ' | 'CODING'>('MCQ');
@@ -99,19 +102,55 @@ export function QuestionBuilder({ examId, initialQuestions, onUpdate }: Question
     setIsAdding(true);
   };
 
+  const handleBulkImport = async (parsedQuestions: QuestionPayload[]) => {
+    if (!parsedQuestions.length) return;
+    setIsUploading(true);
+    try {
+      await examApi.addQuestionsBulk(examId, parsedQuestions);
+      toast.success(`${parsedQuestions.length} questions imported successfully!`);
+      setActiveTab('MANUAL');
+      onUpdate();
+    } catch (err: any) {
+      toast.error(err.displayMessage || 'Failed to import questions');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Questions ({questions.length})</h2>
-        {!isAdding && (
-          <button 
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
-          >
-            <Plus className="w-4 h-4" /> Add Question
-          </button>
-        )}
+      <div className="flex border-b border-slate-100 mb-6">
+        <button
+          onClick={() => setActiveTab('MANUAL')}
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2 ${activeTab === 'MANUAL' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          Manual Questions
+        </button>
+        <button
+          onClick={() => setActiveTab('BULK')}
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2 ${activeTab === 'BULK' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          Bulk Upload CSV
+        </button>
       </div>
+
+      {activeTab === 'BULK' ? (
+        <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+          <BulkUpload onImportQuestions={handleBulkImport} isUploading={isUploading} />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Questions ({questions.length})</h2>
+            {!isAdding && (
+              <button 
+                onClick={() => setIsAdding(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
+              >
+                <Plus className="w-4 h-4" /> Add Question
+              </button>
+            )}
+          </div>
 
       {isAdding && (
         <div className="bg-white border-2 border-blue-100 rounded-[2rem] p-6 lg:p-8 space-y-6 shadow-xl shadow-blue-50/50">
@@ -317,6 +356,8 @@ export function QuestionBuilder({ examId, initialQuestions, onUpdate }: Question
           </div>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }

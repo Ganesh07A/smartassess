@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { requireAuth, requireTeacher } from '../middleware/auth';
 import { getTeacherStats } from '../controllers/teacher/stats';
+import { getStudentList } from '../controllers/teacher/students';
+import { liveExamStream, notifySubmission, notifyViolation } from '../controllers/teacher/live';
 import {
   listExams,
   createExam,
@@ -10,6 +12,7 @@ import {
   publishExam,
   duplicateExam,
   addQuestion,
+  addQuestionsBulk,
   updateQuestion,
   deleteQuestion,
   assignStudents,
@@ -30,6 +33,11 @@ router.use(requireAuth, requireTeacher);
 // Stats
 router.get('/stats', getTeacherStats);
 
+router.get("/students", getStudentList)
+
+// Live SSE stream
+router.get('/exams/:id/live', liveExamStream);
+
 // Exam CRUD
 router.get('/exams',             listExams);
 router.post('/exams',            createExam);
@@ -41,6 +49,7 @@ router.post('/exams/:id/duplicate', duplicateExam);
 
 // Question Management
 router.post('/exams/:id/questions',      addQuestion);
+router.post('/exams/:id/questions/bulk', addQuestionsBulk);
 router.put('/exams/:id/questions/:qid',  updateQuestion);
 router.delete('/exams/:id/questions/:qid', deleteQuestion);
 

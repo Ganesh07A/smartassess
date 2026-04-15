@@ -119,8 +119,11 @@ export const examApi = {
   updateQuestion: (examId: string, questionId: string, payload: Partial<QuestionPayload>) =>
     api.put<Question>(`/api/teacher/exams/${examId}/questions/${questionId}`, payload),
 
-  deleteQuestion: (examId: string, questionId: string) =>
-    api.delete(`/api/teacher/exams/${examId}/questions/${questionId}`),
+  deleteQuestion: (id: string, qid: string) =>
+    api.delete(`/api/teacher/exams/${id}/questions/${qid}`),
+
+  addQuestionsBulk: (id: string, payload: QuestionPayload[]) =>
+    api.post(`/api/teacher/exams/${id}/questions/bulk`, payload),
 
   // Student Assignments
   getAssignments: (examId: string) =>
