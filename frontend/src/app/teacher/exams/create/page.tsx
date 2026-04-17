@@ -8,9 +8,11 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft, Clock, CheckCircle, FileText, Settings,
-  Eye, LayoutDashboard, Plus, Upload, Download
+  Plus, Calendar, Info, HelpCircle, ChevronRight, Upload,
+  Download
 } from 'lucide-react';
 import { Sidebar } from '@/components/teacher/dashboard/Sidebar';
+import { Header } from '@/components/teacher/dashboard/Header';
 import { examApi } from '@/lib/api/examApi';
 
 const schema = z.object({
@@ -27,24 +29,11 @@ type FormData = z.infer<typeof schema>;
 export default function CreateExamPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('DETAILS');
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    // @ts-ignore - mismatch between zod coercion and react-hook-form resolver types
     resolver: zodResolver(schema),
     defaultValues: { duration: 60, totalMarks: 100, passPercent: 40 },
   });
-
-
-  const title       = watch('title') || 'New Exam';
-  const duration    = watch('duration') || 60;
-  const totalMarks  = watch('totalMarks') || 100;
-  const passPercent = watch('passPercent') || 40;
-
-  const dotGridBg = {
-    backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)',
-    backgroundSize: '24px 24px',
-  };
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -53,225 +42,162 @@ export default function CreateExamPage() {
         startTime: data.startTime ? new Date(data.startTime).toISOString() : null,
         endTime:   data.endTime   ? new Date(data.endTime).toISOString()   : null,
       });
-      toast.success('Exam created!');
-      router.push(`/teacher/exams/${res.data.id}`);
+      toast.success('Exam created successfully!');
+      router.push(`/teacher/exams/${res.data.id}/edit`);
     } catch (err: any) {
       toast.error(err.displayMessage ?? 'Failed to create exam');
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-900">
-      {/* Desktop Sidebar (Left Toolbox) */}
-      <div className="hidden lg:block w-72 bg-white border-r border-slate-100 h-screen sticky top-0 overflow-y-auto z-20">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-              <FileText className="w-5 h-5" />
+    <div className="flex min-h-screen bg-slate-50/40">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="flex-1 flex flex-col min-h-screen relative lg:ml-64">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+
+        <main className="flex-1 p-6 lg:p-12 overflow-auto">
+          <div className="max-w-5xl mx-auto space-y-10">
+            
+            {/* Breadcrumbs & Title Section */}
+            <div className="space-y-4">
+               <nav className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <Link href="/teacher/dashboard" className="hover:text-blue-600 transition-colors">Dashboard</Link>
+                  <ChevronRight className="w-3 h-3" />
+                  <Link href="/teacher/exams" className="hover:text-blue-600 transition-colors">Exams</Link>
+                  <ChevronRight className="w-3 h-3" />
+                  <span className="text-slate-900">Create New</span>
+               </nav>
+               <h1 className="text-4xl font-black text-slate-900 tracking-tight">Create New Exam</h1>
             </div>
-            <span className="text-lg font-bold tracking-tight text-slate-800">SmartAssess</span>
-          </div>
 
-          <div className="mb-10">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">Exam Details</h3>
-            <div className="space-y-3 px-1">
-              <StatItem label="Title:" value={title.length > 20 ? title.slice(0, 20) + '…' : title} />
-              <StatItem label="Duration:" value={`${duration} min`} />
-              <StatItem label="Total Marks:" value={String(totalMarks)} />
-              <StatItem label="Pass Score:" value={`${passPercent}%`} color="text-blue-600" />
+            {/* Main Single-Card Creator */}
+            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+               <div className="p-10 lg:p-16 space-y-16">
+                  <div className="max-w-2xl">
+                     <h2 className="text-2xl font-black text-slate-900 mb-2">Core Assessment Details</h2>
+                     <p className="text-sm font-bold text-slate-400 leading-relaxed">
+                        Fill in the basic configuration for your assessment. You'll be able to build your question bank in the next step.
+                     </p>
+                  </div>
+
+                  <form id="create-exam-form" onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                        {/* Title Section */}
+                        <div className="md:col-span-2 space-y-3">
+                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Exam Title</label>
+                           <input
+                              {...register('title')}
+                              className={`w-full bg-slate-50/50 border-2 ${errors.title ? 'border-rose-100 focus:border-rose-200' : 'border-transparent focus:border-blue-100'} rounded-[1.5rem] py-5 px-8 text-base font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-50/50 outline-none transition-all`}
+                              placeholder="e.g. Advanced Operating Systems Midterm"
+                           />
+                           {errors.title && <p className="text-xs text-rose-500 font-bold pl-2">{errors.title.message}</p>}
+                        </div>
+
+                        {/* Description Section */}
+                        <div className="md:col-span-2 space-y-3">
+                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Instructions / Description</label>
+                           <textarea
+                              {...register('description')}
+                              rows={4}
+                              className="w-full bg-slate-50/50 border-2 border-transparent focus:border-blue-100 rounded-[1.5rem] py-5 px-8 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-50/50 outline-none transition-all resize-none"
+                              placeholder="Describe the assessment and provide any specific rules..."
+                           />
+                        </div>
+
+                        {/* Middle Configuration Grid */}
+                        <div className="space-y-3">
+                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Duration (Minutes)</label>
+                           <div className="relative">
+                              <input
+                                 {...register('duration')}
+                                 type="number"
+                                 className="w-full bg-slate-50/50 border-2 border-transparent focus:border-blue-100 rounded-[1.5rem] py-5 px-8 text-base font-black text-slate-900 focus:bg-white focus:ring-4 focus:ring-blue-50/50 outline-none transition-all"
+                              />
+                              <Clock className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                           </div>
+                        </div>
+
+                        <div className="space-y-3">
+                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Total Marks</label>
+                           <div className="relative">
+                              <input
+                                 {...register('totalMarks')}
+                                 type="number"
+                                 className="w-full bg-slate-50/50 border-2 border-transparent focus:border-blue-100 rounded-[1.5rem] py-5 px-8 text-base font-black text-slate-900 focus:bg-white focus:ring-4 focus:ring-blue-50/50 outline-none transition-all"
+                              />
+                              <CheckCircle className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                           </div>
+                        </div>
+
+                        {/* Schedule Section */}
+                        <div className="space-y-3">
+                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Access Window Opens</label>
+                           <div className="relative">
+                              <input
+                                 {...register('startTime')}
+                                 type="datetime-local"
+                                 className="w-full bg-slate-50/50 border-2 border-transparent focus:border-blue-100 rounded-[1.5rem] py-5 px-8 text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-blue-50/50 outline-none transition-all"
+                              />
+                              <Calendar className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                           </div>
+                        </div>
+
+                        <div className="space-y-3">
+                           <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Access Window Closes</label>
+                           <div className="relative">
+                              <input
+                                 {...register('endTime')}
+                                 type="datetime-local"
+                                 className="w-full bg-slate-50/50 border-2 border-transparent focus:border-blue-100 rounded-[1.5rem] py-5 px-8 text-sm font-bold text-slate-900 focus:bg-white focus:ring-4 focus:ring-blue-50/50 outline-none transition-all"
+                              />
+                              <Calendar className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Bulk Upload Teaser - STITCH Style Implementation */}
+                     <div className="pt-8 pt-10 border-t border-slate-50">
+                        <div className="bg-slate-50/50 rounded-[2.5rem] p-10 border-2 border-dashed border-slate-200 text-center flex flex-col items-center">
+                           <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-blue-600 mb-6 font-bold">
+                              <Upload className="w-8 h-8" />
+                           </div>
+                           <h3 className="text-xl font-black text-slate-900 mb-2">Prefer Bulk Upload?</h3>
+                           <p className="text-sm font-bold text-slate-400 max-w-md mx-auto mb-8 leading-relaxed">
+                              You'll have the option to drop your CSV/XLSX template in the next step to add up to 500 questions instantly.
+                           </p>
+                           <div className="flex items-center gap-4">
+                              <button type="button" className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-100 rounded-[1rem] text-[11px] font-black text-slate-600 hover:bg-slate-50 transition-all uppercase tracking-widest">
+                                 <Download className="w-4 h-4" /> Get Template
+                              </button>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Action Bar */}
+                     <div className="pt-10 flex items-center justify-between">
+                        <Link href="/teacher/exams" className="text-sm font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest pl-2">
+                           Discard Draft
+                        </Link>
+                        <button
+                           type="submit"
+                           disabled={isSubmitting}
+                           className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-[2rem] font-black shadow-2xl shadow-blue-200 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 disabled:opacity-50"
+                        >
+                           {isSubmitting ? (
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                           ) : (
+                              <>Create & Continue <ChevronRight className="w-5 h-5" /></>
+                           )}
+                        </button>
+                     </div>
+                  </form>
+               </div>
             </div>
           </div>
-
-          <div className="mb-10">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">After Creation</h3>
-            <p className="text-[10px] text-slate-400 leading-relaxed px-1">
-              Once created, you'll be taken to the exam page where you can add MCQ and Coding questions.
-            </p>
-          </div>
-
-          <Link href="/teacher/exams" className="flex items-center gap-2 px-4 py-3 text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Exams
-          </Link>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Desktop Header */}
-        <header className="hidden lg:flex items-center justify-between px-8 py-5 bg-white border-b border-slate-100 sticky top-0 z-30">
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col">
-              <h1 className="text-base font-bold text-slate-900 tracking-tight">{title}</h1>
-              <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400">
-                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {duration} mins</span>
-                <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {totalMarks} marks</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/teacher/exams" className="px-5 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors">
-              Cancel
-            </Link>
-            <button
-              form="create-exam-form"
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <><ArrowLeft className="w-3.5 h-3.5 rotate-180" /> Create Exam</>
-              )}
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile Header */}
-        <header className="lg:hidden flex items-center justify-between p-5 bg-white border-b border-slate-100 sticky top-0 z-30">
-          <div className="flex items-center gap-4">
-            <Link href="/teacher/exams" className="p-2 -ml-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <h1 className="text-base font-bold text-blue-900 tracking-tight">Create New Exam</h1>
-          </div>
-        </header>
-
-        {/* Main Form Area */}
-        <main className="flex-1 relative flex flex-col p-4 sm:p-6 lg:p-10" style={dotGridBg}>
-          <form id="create-exam-form" onSubmit={handleSubmit(
-            // @ts-ignore – zod coercion types don't align with RHF SubmitHandler
-            onSubmit
-          )}>
-            <div className="max-w-2xl mx-auto w-full space-y-6 lg:mt-6 mb-24">
-
-              {/* Basic Details */}
-              <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 sm:p-8 lg:p-10 transition-all hover:border-blue-100">
-                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Basic Information</h2>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Exam Title *</label>
-                    <input
-                      {...register('title')}
-                      className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                      placeholder="e.g. Advanced Data Structures Midterm"
-                    />
-                    {errors.title && <p className="text-xs text-rose-500 mt-2 pl-1">{errors.title.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Description</label>
-                    <textarea
-                      {...register('description')}
-                      rows={3}
-                      className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
-                      placeholder="Optional instructions for students"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Duration (min) *</label>
-                      <input
-                        {...register('duration')}
-                        type="number" min={5} max={480}
-                        className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-bold text-slate-900 text-center outline-none focus:ring-2 focus:ring-blue-100"
-                      />
-                      {errors.duration && <p className="text-xs text-rose-500 mt-1">{errors.duration.message}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Total Marks *</label>
-                      <input
-                        {...register('totalMarks')}
-                        type="number" min={1}
-                        className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-bold text-slate-900 text-center outline-none focus:ring-2 focus:ring-blue-100"
-                      />
-                      {errors.totalMarks && <p className="text-xs text-rose-500 mt-1">{errors.totalMarks.message}</p>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Settings */}
-              <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-slate-100 p-6 sm:p-8 lg:p-10 transition-all hover:border-blue-100">
-                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-8">Settings</h2>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Passing Score (%)</label>
-                    <input
-                      {...register('passPercent')}
-                      type="number" min={0} max={100}
-                      className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-100"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Start Time</label>
-                      <input
-                        {...register('startTime')}
-                        type="datetime-local"
-                        className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">End Time</label>
-                      <input
-                        {...register('endTime')}
-                        type="datetime-local"
-                        className="w-full bg-slate-50 border border-transparent focus:border-blue-200 rounded-xl py-3.5 px-5 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-blue-100"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Submit */}
-              <div className="lg:hidden">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <><Plus className="w-5 h-5" /> Create Exam</>
-                  )}
-                </button>
-              </div>
-            </div>
-          </form>
         </main>
-
-        {/* Mobile Bottom Nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 py-3 flex items-center justify-between z-40">
-          <TabItem active={activeTab === 'DETAILS'} onClick={() => setActiveTab('DETAILS')} icon={LayoutDashboard} label="DETAILS" />
-          <TabItem active={activeTab === 'SETTINGS'} onClick={() => setActiveTab('SETTINGS')} icon={Settings} label="SETTINGS" />
-        </nav>
       </div>
     </div>
   );
 }
 
-function StatItem({ label, value, color = 'text-slate-800' }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="flex items-center justify-between py-1">
-      <span className="text-[10px] font-bold text-slate-400">{label}</span>
-      <span className={`text-[10px] font-black ${color}`}>{value}</span>
-    </div>
-  );
-}
-
-function TabItem({ active, onClick, icon: Icon, label }: any) {
-  return (
-    <button onClick={onClick} className={`flex-1 flex flex-col items-center gap-1.5 py-1.5 transition-all ${active ? 'text-blue-600' : 'text-slate-400'}`}>
-      <div className={`p-2 rounded-xl transition-all ${active ? 'bg-blue-50 shadow-sm' : ''}`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <span className="text-[8px] font-black tracking-[0.1em]">{label}</span>
-    </button>
-  );
-}

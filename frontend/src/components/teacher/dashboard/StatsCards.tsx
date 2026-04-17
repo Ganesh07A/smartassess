@@ -65,10 +65,9 @@ export function StatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2
-                      xl:grid-cols-5 gap-5 mb-8">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <StatSkeleton key={i} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-pulse h-44" />
         ))}
       </div>
     );
@@ -79,125 +78,77 @@ export function StatsCards() {
       label: 'Total Exams',
       value: stats?.totalExams ?? 0,
       suffix: '',
-      subValue: `${stats?.activeExams ?? 0} active`,
-      trend: '+New',
-      trendValue: stats?.totalExams ?? 0,
       icon: FileText,
-      color: 'bg-blue-50 text-blue-600',
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
       iconBg: 'bg-blue-600',
-      progress: null,
+      description: 'Assessments created'
     },
     {
       label: 'Total Students',
       value: stats?.totalStudents ?? 0,
       suffix: '',
-      subValue: 'Unique learners',
-      trend: 'Enrolled',
-      trendValue: stats?.totalStudents ?? 0,
       icon: Users,
-      color: 'bg-violet-50 text-violet-600',
+      color: 'text-violet-600',
+      bg: 'bg-violet-50',
       iconBg: 'bg-violet-600',
-      progress: null,
+      description: 'Enrolled learners'
     },
     {
       label: 'Active Exams',
       value: stats?.activeExams ?? 0,
       suffix: '',
-      subValue: 'Currently running',
-      trend: 'Live',
-      trendValue: stats?.activeExams ?? 0,
       icon: Clock,
-      color: 'bg-emerald-50 text-emerald-600',
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
       iconBg: 'bg-emerald-600',
-      progress: null,
+      description: 'Currently running'
     },
     {
       label: 'Average Score',
       value: stats?.avgScore ?? 0,
       suffix: '%',
-      subValue: 'Across all exams',
-      trend: 'All time',
-      trendValue: stats?.avgScore ?? 0,
       icon: Award,
-      color: 'bg-amber-50 text-amber-600',
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
       iconBg: 'bg-amber-500',
-      progress: stats?.avgScore ?? 0,
-    },
-    {
-      label: 'Completion Rate',
-      value: stats?.completionRate ?? 0,
-      suffix: '%',
-      subValue: 'Of assigned exams',
-      trend: 'Assigned',
-      trendValue: stats?.completionRate ?? 0,
-      icon: Target,
-      color: 'bg-rose-50 text-rose-600',
-      iconBg: 'bg-rose-500',
-      progress: stats?.completionRate ?? 0,
+      description: 'Overall proficiency'
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2
-                    xl:grid-cols-5 gap-5 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
       {cards.map((stat) => (
         <div
           key={stat.label}
-          className="bg-white p-6 rounded-3xl border border-gray-100
-                     shadow-sm hover:shadow-xl hover:-translate-y-1
-                     transition-all duration-300 group relative
-                     overflow-hidden"
+          className="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden flex flex-col justify-between"
         >
-          {/* Background decoration - STATIC, never re-renders */}
-          <div className={`absolute -right-4 -top-4 w-24 h-24
-                          rounded-full opacity-[0.04] ${stat.iconBg}`} />
-
-          {/* Icon + Badge - STATIC */}
-          <div className="flex items-start justify-between mb-5">
-            <div className={`p-3 rounded-2xl ${stat.color}
-                            group-hover:scale-110 transition-transform
-                            duration-300`}>
-              <stat.icon className="w-5 h-5" />
+          <div className="flex items-start justify-between">
+            <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-500 shadow-sm`}>
+              <stat.icon className="w-6 h-6" />
             </div>
-            <TrendBadge value={stat.trendValue} label={stat.trend} />
+            <div className="h-2 w-2 rounded-full bg-slate-100 group-hover:bg-blue-200 transition-colors" />
           </div>
 
-          {/* Label - STATIC */}
-          <h3 className="text-[11px] font-black text-gray-400
-                         tracking-widest uppercase mb-1">
-            {stat.label}
-          </h3>
-
-          {/* ✅ ONLY THIS NUMBER ANIMATES */}
-          <p className="text-3xl font-black text-gray-900
-                        tracking-tight mb-1">
-            <AnimatedNumber
-              value={stat.value}
-              suffix={stat.suffix}
-              duration={800}
-            />
-          </p>
-
-          {/* Sub label - STATIC */}
-          <p className="text-[11px] font-semibold text-gray-400 mb-4">
-            {stat.subValue}
-          </p>
-
-          {/* ✅ ONLY PROGRESS BAR WIDTH ANIMATES */}
-          {stat.progress !== null && (
-            <div className="w-full h-1.5 bg-gray-100 rounded-full
-                            overflow-hidden">
-              <div
-                className={`h-full rounded-full ${stat.iconBg}`}
-                style={{
-                  width: `${Math.min(stat.progress, 100)}%`,
-                  transition: 'width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)'
-                }}
-              />
+          <div className="mt-6">
+            <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-1">
+              {stat.label}
+            </h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black text-slate-900 tracking-tight">
+                <AnimatedNumber value={stat.value} duration={1000} />
+              </span>
+              <span className="text-xl font-black text-slate-900">{stat.suffix}</span>
             </div>
-          )}
+            <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider italic opacity-0 group-hover:opacity-100 transition-opacity">
+              {stat.description}
+            </p>
+          </div>
+          
+          {/* Subtle background decoration */}
+          <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full ${stat.bg} opacity-0 group-hover:opacity-[0.15] transition-all duration-700 blur-3xl`} />
         </div>
       ))}
     </div>
   );
-}
+}

@@ -57,6 +57,7 @@ export async function parseQuestionsCSV(file: File): Promise<QuestionPayload[]> 
       text: columns[textIdx] || '',
       marks: parseInt(columns[marksIdx]) || 5,
       difficulty: (columns[diffIdx]?.toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD') || 'MEDIUM',
+      order: i - 1, // Maintain CSV order
     };
 
     if (type === 'MCQ') {

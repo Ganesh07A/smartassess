@@ -1,3 +1,4 @@
+// Updated: 2026-04-17T22:20:00Z
 import { api } from '../api';
 
 export interface Exam {
@@ -14,6 +15,7 @@ export interface Exam {
   createdAt: string;
   updatedAt: string;
   questions?: Question[];
+  negativeMarking: boolean;
   _count?: {
     questions: number;
     results: number;
@@ -39,6 +41,7 @@ export interface CreateExamPayload {
   passPercent?: number;
   startTime?: string | null;
   endTime?: string | null;
+  negativeMarking?: boolean;
 }
 
 export interface Question {
@@ -116,14 +119,17 @@ export const examApi = {
   addQuestion: (examId: string, payload: QuestionPayload) =>
     api.post<Question>(`/api/teacher/exams/${examId}/questions`, payload),
 
-  updateQuestion: (examId: string, questionId: string, payload: Partial<QuestionPayload>) =>
-    api.put<Question>(`/api/teacher/exams/${examId}/questions/${questionId}`, payload),
+  addQuestionsBulk: (examId: string, questions: QuestionPayload[]) =>
+    api.post<Question[]>(`/api/teacher/exams/${examId}/questions/bulk`, questions),
+
+  syncQuestions: (examId: string, questions: QuestionPayload[]) =>
+    api.put<Question[]>(`/api/teacher/exams/${examId}/questions`, questions),
+
+  updateQuestion: (examId: string, qid: string, payload: Partial<QuestionPayload>) =>
+    api.put<Question>(`/api/teacher/exams/${examId}/questions/${qid}`, payload),
 
   deleteQuestion: (id: string, qid: string) =>
     api.delete(`/api/teacher/exams/${id}/questions/${qid}`),
-
-  addQuestionsBulk: (id: string, payload: QuestionPayload[]) =>
-    api.post(`/api/teacher/exams/${id}/questions/bulk`, payload),
 
   // Student Assignments
   getAssignments: (examId: string) =>
@@ -131,4 +137,7 @@ export const examApi = {
 
   assignStudents: (examId: string, studentIds: string[]) =>
     api.post(`/api/teacher/exams/${examId}/assignments`, { studentIds }),
+
+  listStudents: (params?: { search?: string; showAll?: boolean }) =>
+    api.get<any[]>('/api/teacher/students', { params }),
 };

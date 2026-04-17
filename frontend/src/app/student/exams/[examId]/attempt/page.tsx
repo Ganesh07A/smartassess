@@ -4,9 +4,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { 
   Clock, Shield, 
   ChevronLeft, ChevronRight, CheckCircle, 
-  Terminal
+  Terminal, Play, AlertCircle, XCircle
 } from 'lucide-react';
-import { studentApi, ExamAttempt } from '@/lib/api/studentApi';
+import { studentApi, ExamAttempt, CodingExecutionResult } from '@/lib/api/studentApi';
 import toast from 'react-hot-toast';
 
 type AnswerValue =
@@ -23,6 +23,10 @@ export default function ExamAttemptPage() {
   const [timeLeft, setTimeLeft] = useState(0); // seconds
   const [loading, setLoading] = useState(true);
   const [isStarted, setIsStarted] = useState(false);
+  
+  // Code Execution
+  const [isRunning, setIsRunning] = useState(false);
+  const [executionResult, setExecutionResult] = useState<CodingExecutionResult | null>(null);
   
   // Proctoring
   const [tabSwitches, setTabSwitches] = useState(0);
@@ -157,6 +161,39 @@ export default function ExamAttemptPage() {
     });
   };
 
+  const handleRunCode = async () => {
+    const currentQ = exam!.questions[currentQIndex];
+    if (currentQ.type !== 'CODING') return;
+
+    const code = (answers[currentQ.id] as { type: 'CODING'; code: string } | undefined)?.code || '';
+    
+    if (!code.trim()) {
+      toast.error('Code cannot be empty');
+      return;
+    }
+
+    setIsRunning(true);
+    setExecutionResult(null);
+    try {
+      const res = await studentApi.runCode(examId, { questionId: currentQ.id, code });
+      setExecutionResult(res.data);
+      if (res.data.passedCount === res.data.totalCount) {
+        toast.success(`All ${res.data.totalCount} test cases passed!`, { icon: '🚀' });
+      } else {
+        toast.error(`Passed ${res.data.passedCount}/${res.data.totalCount} test cases.`);
+      }
+    } catch {
+      toast.error('Code execution failed. Please check Judge0 connection.');
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const navigateToQ = (idx: number) => {
+    setCurrentQIndex(idx);
+    setExecutionResult(null);
+  };
+
   useEffect(() => {
     if (!isStarted) return;
 
@@ -252,7 +289,7 @@ export default function ExamAttemptPage() {
                  {exam?.questions.map((_, idx) => (
                    <button 
                      key={idx}
-                     onClick={() => setCurrentQIndex(idx)}
+                     onClick={() => navigateToQ(idx)}
                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
                        currentQIndex === idx 
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 scale-110' 
@@ -310,7 +347,7 @@ export default function ExamAttemptPage() {
                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                              (answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id ? 'bg-blue-600 border-blue-600' : 'border-slate-200'
                            }`}>
-                              {(answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id && <CheckCircle className="w-4 h-4 text-white" />}
+                               {(answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id && <CheckCircle className="w-4 h-4 text-white" />}
                            </div>
                            <span className="text-sm font-bold tracking-tight">{opt.text}</span>
                         </button>
@@ -324,29 +361,98 @@ export default function ExamAttemptPage() {
                                <Terminal className="w-4 h-4 text-green-400" />
                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Code Editor</span>
                             </div>
-                            <div className="flex gap-1.5">
-                               <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-                               <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
-                               <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+                            <div className="flex items-center gap-3">
+                                <button 
+                                  disabled={isRunning}
+                                  onClick={handleRunCode}
+                                  className="flex items-center gap-1.5 px-3 py-1 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border border-green-500/20 disabled:opacity-50"
+                                >
+                                  {isRunning ? (
+                                    <div className="w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <><Play className="w-3 h-3 fill-current" /> Run Tests</>
+                                  )}
+                                </button>
+                                <div className="flex gap-1.5 border-l border-white/10 pl-3">
+                                   <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+                                   <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+                                   <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+                                </div>
                             </div>
                          </div>
                          <textarea 
                            spellCheck={false}
                            value={(answers[currentQ.id] as { type: 'CODING'; code: string } | undefined)?.code || ''}
                            onChange={(e) => updateAnswer(currentQ.id, { type: 'CODING', code: e.target.value })}
-                           className="flex-1 bg-transparent p-8 text-white font-mono text-sm outline-none resize-none leading-relaxed placeholder:text-slate-700"
+                           className="flex-1 bg-transparent p-8 text-white font-mono text-sm outline-none resize-none leading-relaxed placeholder:text-slate-700 min-h-[300px]"
                            placeholder="// Type your code solution here..."
                          />
                       </div>
                       
-                      {currentQ.testCases && currentQ.testCases.length > 0 && (
+                      {executionResult && (
+                        <div className="bg-white border-2 border-slate-100 rounded-[2rem] p-6 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                          <div className="flex items-center justify-between border-b border-slate-50 pb-4">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Execution Results</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black text-slate-800">{executionResult.passedCount} / {executionResult.totalCount} Passed</span>
+                              <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-green-500 transition-all duration-500" 
+                                  style={{ width: `${(executionResult.passedCount / executionResult.totalCount) * 100}%` }} 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-3">
+                            {executionResult.details.map((res, idx) => (
+                              <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black text-slate-500 uppercase">Test Case {idx + 1}</span>
+                                  <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight flex items-center gap-1 ${res.passed ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700'}`}>
+                                    {res.passed ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                    {res.status}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase">Input</p>
+                                    <p className="text-xs font-mono text-slate-700 bg-white p-2 rounded-lg border border-slate-100">{res.input || 'None'}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase">Expected Output</p>
+                                    <p className="text-xs font-mono text-slate-700 bg-white p-2 rounded-lg border border-slate-100">{res.expectedOutput}</p>
+                                  </div>
+                                </div>
+                                {res.actualOutput !== null && (
+                                  <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase">Actual Output</p>
+                                    <p className={`text-xs font-mono p-2 rounded-lg border ${res.passed ? 'bg-green-50/50 border-green-100 text-green-800' : 'bg-rose-50/50 border-rose-100 text-rose-800'}`}>
+                                      {res.actualOutput || '(Empty Output)'}
+                                    </p>
+                                  </div>
+                                )}
+                                {(res.stderr || res.compileOutput) && (
+                                  <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-rose-400 uppercase flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Debug Info</p>
+                                    <pre className="text-[10px] font-mono p-3 bg-rose-50 text-rose-700 rounded-xl overflow-x-auto whitespace-pre-wrap">
+                                      {res.compileOutput || res.stderr}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {!executionResult && currentQ.testCases && currentQ.testCases.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                            {currentQ.testCases.map((tc, idx) => (
                              <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Test Case {idx+1}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Sample Case {idx+1}</p>
                                 <div className="space-y-1">
-                                   <p className="text-[10px] text-slate-500 font-medium">Input: <span className="font-bold text-slate-900">{tc.input}</span></p>
-                                   <p className="text-[10px] text-slate-500 font-medium">Output: <span className="font-bold text-slate-900">{tc.expectedOutput}</span></p>
+                                   <p className="text-[10px] text-slate-500 font-medium line-clamp-1">In: <span className="font-bold text-slate-900">{tc.input}</span></p>
+                                   <p className="text-[10px] text-slate-500 font-medium line-clamp-1">Out: <span className="font-bold text-slate-900">{tc.expectedOutput}</span></p>
                                 </div>
                              </div>
                            ))}
@@ -354,13 +460,13 @@ export default function ExamAttemptPage() {
                       )}
                     </div>
                   )}
-               </div>
+                </div>
 
                {/* Navigation Buttons */}
                <div className="flex items-center justify-between pt-10 border-t border-slate-100">
                   <button 
                     disabled={currentQIndex === 0}
-                    onClick={() => setCurrentQIndex(prev => prev - 1)}
+                    onClick={() => navigateToQ(currentQIndex - 1)}
                     className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                      <ChevronLeft className="w-4 h-4" /> Previous
@@ -370,7 +476,7 @@ export default function ExamAttemptPage() {
                       if (currentQIndex === exam!.questions.length - 1) {
                         handleSubmit();
                       } else {
-                        setCurrentQIndex(prev => prev + 1);
+                        navigateToQ(currentQIndex + 1);
                       }
                     }}
                     className="px-10 py-4 bg-slate-900 text-white text-xs font-black rounded-2xl shadow-xl shadow-slate-200 hover:scale-105 active:scale-95 transition-all"
@@ -387,8 +493,8 @@ export default function ExamAttemptPage() {
       <div className="lg:hidden h-20 border-t border-slate-100 px-6 flex items-center justify-between bg-white text-xs font-bold text-slate-500">
          <span>Q{currentQIndex+1} / {exam?.questions.length}</span>
          <div className="flex gap-2">
-            <button onClick={() => setCurrentQIndex(prev => Math.max(0, prev - 1))} className="p-3 bg-slate-50 rounded-xl"><ChevronLeft className="w-4 h-4" /></button>
-            <button onClick={() => setCurrentQIndex(prev => Math.min(exam!.questions.length - 1, prev + 1))} className="p-3 bg-slate-50 rounded-xl"><ChevronRight className="w-4 h-4" /></button>
+            <button onClick={() => navigateToQ(Math.max(0, currentQIndex - 1))} className="p-3 bg-slate-50 rounded-xl"><ChevronLeft className="w-4 h-4" /></button>
+            <button onClick={() => navigateToQ(Math.min(exam!.questions.length - 1, currentQIndex + 1))} className="p-3 bg-slate-50 rounded-xl"><ChevronRight className="w-4 h-4" /></button>
          </div>
       </div>
 

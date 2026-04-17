@@ -47,6 +47,7 @@ model Exam {
   duration    Int        // Duration in minutes
   totalMarks  Int
   passPercent Float      @default(40)
+  negativeMarking Boolean @default(false)
   status      ExamStatus @default(DRAFT)
   teacherId   String
   teacher     User       @relation("TeacherExams", fields: [teacherId], references: [id])

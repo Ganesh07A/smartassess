@@ -30,6 +30,7 @@ export const CreateExamSchema = z.object({
   passPercent: z.number().min(0).max(100).default(40),
   startTime:   z.string().datetime().optional().nullable(),
   endTime:     z.string().datetime().optional().nullable(),
+  negativeMarking: z.boolean().default(false),
 });
 
 export const UpdateExamSchema = CreateExamSchema.partial();

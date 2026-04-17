@@ -3,26 +3,6 @@ import { clerkClient } from '@clerk/express';
 import prisma from '../lib/prisma';
 import { evaluateCodingSubmission } from '../services/judge0';
 
-// Helper: resolve student DB id from Clerk ID
-async function getStudentId(clerkId: string): Promise<string | null> {
-  let user = await prisma.user.findUnique({ where: { clerkId } });
-  if (!user) {
-    try {
-      const clerkUser = await clerkClient.users.getUser(clerkId);
-      user = await prisma.user.create({
-        data: {
-          clerkId,
-          email: clerkUser.emailAddresses[0]?.emailAddress || '',
-          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Unknown',
-          role: 'STUDENT'
-        }
-      });
-    } catch (err) {
-      console.error('Failed to create student locally:', err);
-    }
-  }
-  return user?.id || null;
-}
 
 async function ensureEligibleExam(examId: string, studentId: string) {
   const assigned = await prisma.examAssignment.findUnique({
@@ -62,8 +42,7 @@ async function ensureActiveAttempt(examId: string, studentId: string) {
 // ───────────────────────────────────────────────
 export async function getAssignedExams(req: Request, res: Response, next: NextFunction) {
   try {
-    const studentId = await getStudentId(req.auth.userId);
-    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+    const studentId = (req as any).userId;
 
     const assignments = await prisma.examAssignment.findMany({
       where: { studentId },
@@ -95,8 +74,7 @@ export async function getAssignedExams(req: Request, res: Response, next: NextFu
 // ───────────────────────────────────────────────
 export async function getExamDetails(req: Request, res: Response, next: NextFunction) {
   try {
-    const studentId = await getStudentId(req.auth.userId);
-    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+    const studentId = (req as any).userId;
 
     const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
     if (eligibility.error) {
@@ -169,8 +147,7 @@ export async function startAttempt(req: Request, res: Response, next: NextFuncti
 // ───────────────────────────────────────────────
 export async function saveExamProgress(req: Request, res: Response, next: NextFunction) {
   try {
-    const studentId = await getStudentId(req.auth.userId);
-    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+    const studentId = (req as any).userId;
 
     const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
     if (eligibility.error) {
@@ -217,8 +194,7 @@ export async function saveExamProgress(req: Request, res: Response, next: NextFu
 // ───────────────────────────────────────────────
 export async function reportViolation(req: Request, res: Response, next: NextFunction) {
   try {
-    const studentId = await getStudentId(req.auth.userId);
-    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+    const studentId = (req as any).userId;
 
     const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
     if (eligibility.error) {
@@ -265,12 +241,49 @@ export async function reportViolation(req: Request, res: Response, next: NextFun
 }
 
 // ───────────────────────────────────────────────
+// POST /api/student/exams/:id/run
+// ───────────────────────────────────────────────
+export async function runCode(req: Request, res: Response, next: NextFunction) {
+  try {
+    const studentId = (req as any).userId;
+
+    const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
+    if (eligibility.error) {
+      return res.status(eligibility.error.status).json({ error: eligibility.error.message });
+    }
+
+    const { questionId, code } = req.body;
+    if (!questionId || typeof code !== 'string') {
+      return res.status(400).json({ error: 'questionId and code (string) are required' });
+    }
+
+    const question = await prisma.question.findUnique({
+      where: { id: questionId },
+      include: { testCases: { where: { isVisible: true } } }
+    });
+
+    if (!question || question.examId !== req.params.id) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    if (question.type !== 'CODING') {
+      return res.status(400).json({ error: 'Question is not a coding question' });
+    }
+
+    const evaluation = await evaluateCodingSubmission(code, question.testCases);
+
+    return res.json(evaluation);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ───────────────────────────────────────────────
 // POST /api/student/exams/:id/submit
 // ───────────────────────────────────────────────
 export async function submitExam(req: Request, res: Response, next: NextFunction) {
   try {
-    const studentId = await getStudentId(req.auth.userId);
-    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+    const studentId = (req as any).userId;
 
     const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
     if (eligibility.error) {

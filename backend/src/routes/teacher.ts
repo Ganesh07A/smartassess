@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth, requireTeacher } from '../middleware/auth';
+import { requireAuth, requireTeacher, resolveUser } from '../middleware/auth';
 import { getTeacherStats } from '../controllers/teacher/stats';
 import { getStudentList } from '../controllers/teacher/students';
 import { liveExamStream, notifySubmission, notifyViolation } from '../controllers/teacher/live';
@@ -13,6 +13,7 @@ import {
   duplicateExam,
   addQuestion,
   addQuestionsBulk,
+  syncQuestions,
   updateQuestion,
   deleteQuestion,
   assignStudents,
@@ -27,8 +28,8 @@ import {
 
 const router = Router();
 
-// All teacher routes require auth + teacher role
-router.use(requireAuth, requireTeacher);
+// All teacher routes require auth + user resolution + teacher role check
+router.use(requireAuth, resolveUser, requireTeacher);
 
 // Stats
 router.get('/stats', getTeacherStats);
@@ -50,6 +51,7 @@ router.post('/exams/:id/duplicate', duplicateExam);
 // Question Management
 router.post('/exams/:id/questions',      addQuestion);
 router.post('/exams/:id/questions/bulk', addQuestionsBulk);
+router.put('/exams/:id/questions',       syncQuestions);
 router.put('/exams/:id/questions/:qid',  updateQuestion);
 router.delete('/exams/:id/questions/:qid', deleteQuestion);
 

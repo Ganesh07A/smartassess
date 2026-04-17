@@ -9,9 +9,20 @@ type Judge0SubmissionResponse = {
   message?: string;
 };
 
+export type TestCaseOutcome = {
+  passed: boolean;
+  input: string;
+  expectedOutput: string;
+  actualOutput: string | null;
+  status: string;
+  stderr: string | null;
+  compileOutput: string | null;
+}
+
 export type CodingEvaluationResult = {
   passedCount: number;
   totalCount: number;
+  details: TestCaseOutcome[];
 };
 
 const DEFAULT_JUDGE0_BASE_URL = 'https://ce.judge0.com';
@@ -36,7 +47,7 @@ function getJudge0Config() {
   return { baseUrl, languageId };
 }
 
-async function runTestCase(sourceCode: string, input: string, expectedOutput: string): Promise<boolean> {
+async function runTestCase(sourceCode: string, input: string, expectedOutput: string): Promise<TestCaseOutcome> {
   const { baseUrl, languageId } = getJudge0Config();
 
   const headers: Record<string, string> = {
@@ -66,13 +77,20 @@ async function runTestCase(sourceCode: string, input: string, expectedOutput: st
   }
 
   const result = (await response.json()) as Judge0SubmissionResponse;
+  
+  const actualOutput = normalizeOutput(result.stdout);
+  const normalizedExpected = normalizeOutput(expectedOutput);
+  const passed = result.status?.id === ACCEPTED_STATUS_ID || actualOutput === normalizedExpected;
 
-  if (result.status?.id === ACCEPTED_STATUS_ID) {
-    return true;
-  }
-
-  // Fallback output comparison to handle providers that do not evaluate expected_output.
-  return normalizeOutput(result.stdout) === normalizeOutput(expectedOutput);
+  return {
+    passed,
+    input,
+    expectedOutput: normalizedExpected,
+    actualOutput: result.stdout ?? null,
+    status: result.status?.description || 'Unknown',
+    stderr: result.stderr ?? null,
+    compileOutput: result.compile_output ?? null,
+  };
 }
 
 export async function evaluateCodingSubmission(
@@ -83,15 +101,26 @@ export async function evaluateCodingSubmission(
     return {
       passedCount: 0,
       totalCount: testCases.length,
+      details: testCases.map(tc => ({
+        passed: false,
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
+        actualOutput: null,
+        status: 'Empty Submission',
+        stderr: null,
+        compileOutput: null
+      }))
     };
   }
 
-  const outcomes = await Promise.all(
+  const details = await Promise.all(
     testCases.map((testCase) => runTestCase(sourceCode, testCase.input, testCase.expectedOutput)),
   );
 
   return {
-    passedCount: outcomes.filter(Boolean).length,
+    passedCount: details.filter(d => d.passed).length,
     totalCount: testCases.length,
+    details,
   };
 }
+

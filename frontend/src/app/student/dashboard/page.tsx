@@ -22,8 +22,8 @@ export default function StudentDashboard() {
       try {
         const res = await studentApi.listExams();
         setExams(res.data);
-      } catch (err) {
-        toast.error('Failed to load your assessments');
+      } catch (err: any) {
+        toast.error(err.displayMessage || 'Failed to load your assessments');
       } finally {
         setLoading(false);
       }

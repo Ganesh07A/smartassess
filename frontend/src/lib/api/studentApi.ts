@@ -38,6 +38,22 @@ export interface ViolationPayload {
   metadata?: Record<string, unknown>;
 }
 
+export interface TestCaseOutcome {
+  passed: boolean;
+  input: string;
+  expectedOutput: string;
+  actualOutput: string | null;
+  status: string;
+  stderr: string | null;
+  compileOutput: string | null;
+}
+
+export interface CodingExecutionResult {
+  passedCount: number;
+  totalCount: number;
+  details: TestCaseOutcome[];
+}
+
 export const studentApi = {
   listExams: () =>
     api.get<StudentExam[]>('/api/student/exams'),
@@ -53,6 +69,9 @@ export const studentApi = {
 
   reportViolation: (id: string, payload: ViolationPayload) =>
     api.post(`/api/student/exams/${id}/violation`, payload),
+
+  runCode: (examId: string, payload: { questionId: string; code: string }) =>
+    api.post<CodingExecutionResult>(`/api/student/exams/${examId}/run`, payload),
 
   submitExam: (id: string, payload: SubmissionPayload) =>
     api.post(`/api/student/exams/${id}/submit`, payload),

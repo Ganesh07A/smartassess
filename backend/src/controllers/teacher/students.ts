@@ -10,8 +10,9 @@ export async function getStudentList(
   try {
     const search = (req.query.search as string)?.trim();
     const examId = req.query.examId as string;
+    const showAll = req.query.showAll === 'true';
 
-    const where: any = { role: 'STUDENT' };
+    const where: any = showAll ? {} : { role: 'STUDENT' };
 
     if (search) {
       where.OR = [
