@@ -5,17 +5,21 @@ import Link from 'next/link';
 import { 
   Trophy, ChevronLeft, Target, 
   BarChart3, CheckCircle, XCircle,
-  FileText, Clock, AlertTriangle, Shield
+  FileText, Clock, AlertTriangle, Shield,
+  Download
 } from 'lucide-react';
 
 import { Sidebar } from '@/components/teacher/dashboard/Sidebar';
 import { Header } from '@/components/teacher/dashboard/Header';
+import { useUser } from '@clerk/nextjs';
 import { studentApi, StudentExam } from '@/lib/api/studentApi';
+import { exportResultSlip } from '@/lib/exportUtils';
 import toast from 'react-hot-toast';
 
 export default function ExamResultsPage() {
   const { examId } = useParams<{ examId: string }>();
   const router = useRouter();
+  const { user } = useUser();
   const [exam, setExam] = useState<StudentExam | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -76,10 +80,31 @@ export default function ExamResultsPage() {
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-2xl">
-                       <ResultStat label="Percentage" value={`${result.percentage.toFixed(1)}%`} icon={Target} />
+                       <ResultStat label="Percentage" value={`${(result.percentage ?? 0).toFixed(1)}%`} icon={Target} />
                        <ResultStat label="Points" value={result.totalScore} icon={BarChart3} />
                        <ResultStat label="Status" value={result.passed ? 'PASSED' : 'FAILED'} icon={result.passed ? CheckCircle : XCircle} />
                     </div>
+
+                    <button 
+                      onClick={() => {
+                        if (!exam || !exam.myResult) return;
+                        const loadingToast = toast.loading("Generating official result slip...");
+                        exportResultSlip({
+                            student: { 
+                                name: user?.fullName || 'Student', 
+                                email: user?.primaryEmailAddress?.emailAddress || 'N/A',
+                                id: user?.id 
+                            },
+                            exam: exam,
+                            result: exam.myResult,
+                            teacherName: (exam as any).teacher?.name // Attempt to get teacher name if provided by backend
+                        });
+                        toast.success("Result slip downloaded!", { id: loadingToast });
+                      }}
+                      className="mt-10 flex items-center gap-2 px-8 py-4 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl text-sm font-black hover:bg-white/30 transition-all active:scale-[0.98]"
+                    >
+                       <Download className="w-5 h-5" /> Download Formal Result
+                    </button>
                  </div>
                  
                  {/* Decorative background circle */}
@@ -87,7 +112,7 @@ export default function ExamResultsPage() {
               </div>
 
               {/* Detailed Feedback (Placeholder) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 print:hidden">
                  <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
                     <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                        <FileText className="w-4 h-4" /> Exam Info
@@ -124,6 +149,8 @@ export default function ExamResultsPage() {
            </div>
         </main>
       </div>
+
+
     </div>
   );
 }

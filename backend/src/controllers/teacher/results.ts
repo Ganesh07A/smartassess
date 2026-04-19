@@ -218,27 +218,21 @@ export async function exportExamResults(req: Request, res: Response, next: NextF
     });
 
     const header = [
-      'Rank',
       'Student Name',
-      'Student Email',
-      'Score',
-      'Max Score',
-      'Percentage',
-      'Passed',
+      'Email',
+      'Marks Scored',
+      'Total Marks',
+      'Result',
       'Tab Switches',
-      'Submitted At',
     ];
 
-    const csvRows = rows.map((row, index) => [
-      String(index + 1),
+    const csvRows = rows.map((row) => [
       row.student.name,
       row.student.email,
       String(row.totalScore),
       String(row.maxScore),
-      String(Number(row.percentage.toFixed(2))),
-      row.passed ? 'Yes' : 'No',
+      row.passed ? 'Pass' : 'Fail',
       String(row.tabSwitches),
-      row.submittedAt?.toISOString() || '',
     ]);
 
     const escapeCsv = (value: string) => `"${String(value).replace(/"/g, '""')}"`;
@@ -252,6 +246,37 @@ export async function exportExamResults(req: Request, res: Response, next: NextF
       `attachment; filename="${owned.title.replace(/\s+/g, '_').toLowerCase()}_results.csv"`,
     );
     return res.send(content);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getStudentPerformance(req: Request, res: Response, next: NextFunction) {
+  try {
+    const teacherId = await getTeacherId(req.auth.userId);
+    if (!teacherId) return res.status(404).json({ error: 'Teacher not found' });
+
+    const studentId = req.params.studentId as string;
+    
+    const submissions = await prisma.result.findMany({
+      where: {
+        studentId,
+        status: { in: ['SUBMITTED', 'GRADED'] }
+      },
+      include: {
+        exam: {
+          select: { title: true, totalMarks: true }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: { name: true, email: true }
+    });
+
+    return res.json({ student, submissions });
   } catch (err) {
     next(err);
   }

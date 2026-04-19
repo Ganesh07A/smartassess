@@ -22,5 +22,9 @@ router.put('/exams/:id/save', saveExamProgress);
 router.post('/exams/:id/violation', reportViolation);
 router.post('/exams/:id/run',    runCode);
 router.post('/exams/:id/submit', submitExam);
+router.get('/performance', (req, res, next) => {
+  const { getStudentPerformanceSelf } = require('../controllers/student');
+  return getStudentPerformanceSelf(req, res, next);
+});
 
 export default router;

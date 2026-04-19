@@ -35,7 +35,15 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
-        window.location.href = '/sign-in';
+        // Prevent infinite redirect loops: if we're already on a protected page
+        // and Clerk hasn't logged us out yet, redirecting to sign-in will just
+        // bounce us back here.
+        const path = window.location.pathname;
+        if (!path.startsWith('/sign-in') && !path.startsWith('/sign-up') && path !== '/') {
+          // If we are at the root or sign-in, don't redirect.
+          // In a real app, you might want to force a Clerk sign-out here if the backend is consistently failing.
+          window.location.href = '/sign-in';
+        }
       }
     }
     // Surface structured error messages from the backend

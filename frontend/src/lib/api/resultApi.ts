@@ -59,5 +59,8 @@ export const resultApi = {
   getExamAnalytics: (examId: string) =>
     api.get<ExamAnalytics>(`/api/teacher/exams/${examId}/analytics`),
 
+  getStudentPerformance: (studentId: string) =>
+    api.get<{ student: any; submissions: any[] }>(`/api/teacher/students/${studentId}/performance`),
+
   getExportUrl: (examId: string) => `/api/teacher/exams/${examId}/results/export`,
 };

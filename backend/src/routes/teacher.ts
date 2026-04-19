@@ -24,6 +24,7 @@ import {
   getSubmissionDetail,
   getExamAnalytics,
   exportExamResults,
+  getStudentPerformance,
 } from '../controllers/teacher/results';
 
 const router = Router();
@@ -64,5 +65,6 @@ router.get('/exams/:id/results',         listExamResults);
 router.get('/results/:submissionId',     getSubmissionDetail);
 router.get('/exams/:id/analytics',       getExamAnalytics);
 router.get('/exams/:id/results/export',  exportExamResults);
+router.get('/students/:studentId/performance', getStudentPerformance);
 
 export default router;

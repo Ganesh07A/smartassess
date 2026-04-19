@@ -180,7 +180,13 @@ export default function TeacherResultsOverviewPage() {
                           </td>
                           <td className="px-8 py-6">
                             <div className="flex justify-end items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <a href={`/api/teacher/exams/${exam.id}/results/export`} className="p-2 text-slate-400 hover:text-primary transition-colors">
+                            <div className="flex justify-end items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <a 
+                                href={`${typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : ''}/api/teacher/exams/${exam.id}/results/export`} 
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-2 text-slate-400 hover:text-primary transition-colors"
+                              >
                                 <Download className="w-5 h-5" />
                               </a>
                               <Link
@@ -189,6 +195,7 @@ export default function TeacherResultsOverviewPage() {
                               >
                                 Open <ChevronRight className="w-3.5 h-3.5" />
                               </Link>
+                            </div>
                             </div>
                           </td>
                         </tr>

@@ -6,9 +6,10 @@ import { useUser } from '@clerk/nextjs';
 import {
   FileText, Clock, ChevronRight,
   CheckCircle2, AlertCircle, Calendar,
-  BookOpen, Trophy, Activity
+  BookOpen, Trophy, Activity, History
 } from 'lucide-react';
 import { studentApi, StudentExam } from '@/lib/api/studentApi';
+import { exportStudentHistory } from '@/lib/exportUtils';
 import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
@@ -16,6 +17,8 @@ export default function StudentDashboard() {
   const [exams, setExams] = useState<StudentExam[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -30,6 +33,33 @@ export default function StudentDashboard() {
     };
     fetchExams();
   }, []);
+
+  const handleDownloadHistory = async () => {
+    setIsFetchingHistory(true);
+    const loadingToast = toast.loading("Generating your university-standard report...");
+    try {
+        const { data } = await studentApi.getPerformance();
+        if (!data || !data.submissions || data.submissions.length === 0) {
+            toast.error("No performance history found.", { id: loadingToast });
+            return;
+        }
+        
+        exportStudentHistory({
+            student: { 
+                name: user?.fullName || 'Student', 
+                email: user?.primaryEmailAddress?.emailAddress || 'N/A',
+                id: user?.id 
+            },
+            submissions: data.submissions,
+            teacherName: "SmartAssess Academic Portal"
+        });
+        toast.success("Professional report downloaded!", { id: loadingToast });
+    } catch (error: any) {
+        toast.error(error.displayMessage || "Failed to generate performance report", { id: loadingToast });
+    } finally {
+        setIsFetchingHistory(false);
+    }
+  };
 
   const activeExams = exams.filter(e => 
     e.status === 'ACTIVE' || e.status === 'PUBLISHED'
@@ -61,15 +91,27 @@ export default function StudentDashboard() {
             <div className="relative p-8 rounded-[2.5rem] bg-gradient-to-br 
                             from-blue-600 to-indigo-700 text-white 
                             overflow-hidden shadow-2xl shadow-blue-200">
-              <div className="relative z-10">
-                <h1 className="text-3xl font-black tracking-tight mb-2">
-                  Welcome back, {user?.firstName || 'Student'}! 👋
-                </h1>
-                <p className="text-blue-100 font-medium max-w-md">
-                  You have {activeExams.length} active assessment
-                  {activeExams.length !== 1 ? 's' : ''} waiting. 
-                  Ready to excel?
-                </p>
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl font-black tracking-tight mb-2">
+                    Welcome back, {user?.firstName || 'Student'}! 👋
+                  </h1>
+                  <p className="text-blue-100 font-medium max-w-md">
+                    You have {activeExams.length} active assessment
+                    {activeExams.length !== 1 ? 's' : ''} waiting. 
+                    Ready to excel?
+                  </p>
+                </div>
+                <button 
+                  onClick={handleDownloadHistory}
+                  disabled={isFetchingHistory}
+                  className="flex items-center gap-2 px-6 py-4 bg-white/10 backdrop-blur-md border border-white/20 
+                             rounded-2xl text-sm font-black hover:bg-white/20 transition-all active:scale-[0.98]
+                             disabled:opacity-50 min-w-[220px] justify-center"
+                >
+                   <History className="w-5 h-5 text-white" />
+                   {isFetchingHistory ? 'Preparing Report...' : 'Performance Report'}
+                </button>
               </div>
               <div className="absolute right-[-10%] bottom-[-20%] opacity-10">
                 <FileText className="w-64 h-64" />
@@ -79,7 +121,7 @@ export default function StudentDashboard() {
             {/* Quick Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white rounded-2xl p-6 border border-slate-100 
-                              flex items-center gap-4">
+                               flex items-center gap-4">
                 <div className="p-3 bg-blue-50 rounded-xl">
                   <BookOpen className="w-6 h-6 text-blue-600" />
                 </div>
@@ -94,7 +136,7 @@ export default function StudentDashboard() {
               </div>
 
               <div className="bg-white rounded-2xl p-6 border border-slate-100 
-                              flex items-center gap-4">
+                               flex items-center gap-4">
                 <div className="p-3 bg-green-50 rounded-xl">
                   <Trophy className="w-6 h-6 text-green-600" />
                 </div>
@@ -109,7 +151,7 @@ export default function StudentDashboard() {
               </div>
 
               <div className="bg-white rounded-2xl p-6 border border-slate-100 
-                              flex items-center gap-4">
+                               flex items-center gap-4">
                 <div className="p-3 bg-orange-50 rounded-xl">
                   <Activity className="w-6 h-6 text-orange-600" />
                 </div>
@@ -215,6 +257,7 @@ export default function StudentDashboard() {
           </div>
         </main>
       </div>
+
     </div>
   );
 }

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import {
   Plus, Search, FileText, Trash2, Edit, Eye, Copy, Send,
   ChevronLeft, ChevronRight, Filter, Users, HelpCircle,
-  Calendar, MoreVertical, ExternalLink
+  Calendar, MoreVertical, ExternalLink, BarChart
 } from 'lucide-react';
 import { Sidebar } from '@/components/teacher/dashboard/Sidebar';
 import { Header } from '@/components/teacher/dashboard/Header';
@@ -246,6 +246,13 @@ function ExamCard({ exam, onDelete, onPublish }: { exam: Exam; onDelete: () => v
              <span className="text-[11px] font-bold text-slate-600">{new Date(exam.createdAt).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center gap-2">
+             <Link 
+               href={`/teacher/exams/${exam.id}/results`} 
+               className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all"
+               title="View Results"
+             >
+                <BarChart className="w-4 h-4" />
+             </Link>
              {exam.status === 'DRAFT' && (
                 <button onClick={onPublish} className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
                    Go Live

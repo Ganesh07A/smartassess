@@ -70,9 +70,12 @@ export const studentApi = {
   reportViolation: (id: string, payload: ViolationPayload) =>
     api.post(`/api/student/exams/${id}/violation`, payload),
 
-  runCode: (examId: string, payload: { questionId: string; code: string }) =>
+  runCode: (examId: string, payload: { questionId: string; code: string; languageId?: number }) =>
     api.post<CodingExecutionResult>(`/api/student/exams/${examId}/run`, payload),
 
   submitExam: (id: string, payload: SubmissionPayload) =>
     api.post(`/api/student/exams/${id}/submit`, payload),
+
+  getPerformance: () =>
+    api.get<{ student: any; submissions: any[] }>('/api/student/performance'),
 };

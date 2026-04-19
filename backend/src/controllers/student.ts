@@ -60,6 +60,11 @@ export async function getAssignedExams(req: Request, res: Response, next: NextFu
       orderBy: { assignedAt: 'desc' }
     });
 
+    console.log(`[STUDENT] Found ${assignments.length} assignments for User ID: ${studentId}`);
+    if (assignments.length > 0) {
+      console.log(`[STUDENT] First assignment Exam: ${assignments[0].exam.title} (Status: ${assignments[0].exam.status})`);
+    }
+
     return res.json(assignments.map(a => ({
       ...a.exam,
       myResult: a.exam.results[0] || null
@@ -107,7 +112,7 @@ export async function getExamDetails(req: Request, res: Response, next: NextFunc
 // ───────────────────────────────────────────────
 export async function startAttempt(req: Request, res: Response, next: NextFunction) {
   try {
-    const studentId = await getStudentId(req.auth.userId);
+    const studentId = (req as any).userId;
     if (!studentId) return res.status(404).json({ error: 'Student not found' });
 
     const eligibility = await ensureEligibleExam(req.params.id as string, studentId);
@@ -252,7 +257,7 @@ export async function runCode(req: Request, res: Response, next: NextFunction) {
       return res.status(eligibility.error.status).json({ error: eligibility.error.message });
     }
 
-    const { questionId, code } = req.body;
+    const { questionId, code, languageId } = req.body;
     if (!questionId || typeof code !== 'string') {
       return res.status(400).json({ error: 'questionId and code (string) are required' });
     }
@@ -270,7 +275,7 @@ export async function runCode(req: Request, res: Response, next: NextFunction) {
       return res.status(400).json({ error: 'Question is not a coding question' });
     }
 
-    const evaluation = await evaluateCodingSubmission(code, question.testCases);
+    const evaluation = await evaluateCodingSubmission(code, question.testCases, languageId);
 
     return res.json(evaluation);
   } catch (err) {
@@ -315,7 +320,7 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
     let totalScoreRaw = 0;
 
     for (const question of exam.questions) {
-      const studentAnswer = answers[question.id] as Record<string, unknown> | undefined;
+      const studentAnswer = answers[question.id] as Record<string, any> | undefined;
       if (!studentAnswer || typeof studentAnswer !== 'object') continue;
 
       if (question.type === 'MCQ') {
@@ -325,7 +330,8 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
         }
       } else if (question.type === 'CODING') {
         const sourceCode = typeof studentAnswer.code === 'string' ? studentAnswer.code : '';
-        const evaluation = await evaluateCodingSubmission(sourceCode, question.testCases);
+        const languageId = studentAnswer.languageId;
+        const evaluation = await evaluateCodingSubmission(sourceCode, question.testCases, languageId);
         if (evaluation.totalCount > 0) {
           totalScoreRaw += (evaluation.passedCount / evaluation.totalCount) * question.marks;
         }
@@ -350,6 +356,35 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
     });
 
     return res.json(updatedResult);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getStudentPerformanceSelf(req: Request, res: Response, next: NextFunction) {
+  try {
+    const studentId = (req as any).userId;
+    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+
+    const submissions = await prisma.result.findMany({
+      where: {
+        studentId,
+        status: { in: ['SUBMITTED', 'GRADED'] }
+      },
+      include: {
+        exam: {
+          select: { title: true, totalMarks: true }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: { name: true, email: true }
+    });
+
+    return res.json({ student, submissions });
   } catch (err) {
     next(err);
   }

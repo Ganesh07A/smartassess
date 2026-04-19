@@ -20,28 +20,89 @@ import {
   ChevronRight,
   Eye,
   History,
-  Mail,
-  LucideIcon
+  Mail
 } from 'lucide-react';
 import { Sidebar } from '@/components/teacher/dashboard/Sidebar';
 import { Header } from '@/components/teacher/dashboard/Header';
 import { resultApi } from '@/lib/api/resultApi';
+import { 
+  exportExamLeaderboard, 
+  exportStudentHistory, 
+  exportToCSV 
+} from '@/lib/exportUtils';
+import { useUser } from '@clerk/nextjs';
+import toast from 'react-hot-toast';
 
 export default function ExamResultsPage() {
   const { examId } = useParams<{ examId: string }>();
+  const { user } = useUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
   const { data: leaderboard, isLoading } = useSWR(
     `/api/teacher/exams/${examId}/results?page=${page}`,
-    () => resultApi.getExamResults(examId, { page, limit: 20 }).then((r) => r.data),
+    () => resultApi.getExamResults(examId, { page, limit: 100 }).then((r) => r.data),
   );
 
   const { data: analytics } = useSWR(
     `/api/teacher/exams/${examId}/analytics`,
     () => resultApi.getExamAnalytics(examId).then((r) => r.data),
   );
+
+  const handleDownloadHistory = async (studentId: string, studentName: string, studentEmail: string) => {
+    setIsFetchingHistory(true);
+    const loadingToast = toast.loading("Generating professional history report...");
+    try {
+        const { data } = await resultApi.getStudentPerformance(studentId);
+        if (!data || !data.submissions || data.submissions.length === 0) {
+            toast.error("No performance history found.", { id: loadingToast });
+            return;
+        }
+        
+        exportStudentHistory({
+            student: { name: studentName, email: studentEmail, id: studentId },
+            submissions: data.submissions,
+            teacherName: user?.fullName || undefined
+        });
+        toast.success("Report downloaded!", { id: loadingToast });
+    } catch (error: any) {
+        toast.error(error.displayMessage || "Failed to generate report.", { id: loadingToast });
+    } finally {
+        setIsFetchingHistory(false);
+    }
+  };
+
+  const handleFullPDFExport = () => {
+    if (!leaderboard || !analytics) return;
+    const loadingToast = toast.loading("Generating class-wide PDF...");
+    exportExamLeaderboard({
+        examTitle: leaderboard.data[0]?.exam?.title || 'Assessment Report',
+        analytics: analytics,
+        students: leaderboard.data,
+        teacherName: user?.fullName || undefined,
+        createdAt: leaderboard.data[0]?.exam?.createdAt || undefined
+    });
+    toast.success("Class report generated!", { id: loadingToast });
+  };
+
+  const handleCSVExport = () => {
+    if (!leaderboard) return;
+    const loadingToast = toast.loading("Preparing CSV file...");
+    const csvData = leaderboard.data.map((row: any, idx: number) => ({
+        'Sr. No': idx + 1,
+        'Student Name': row.student.name,
+        'Email': row.student.email,
+        'Score': row.totalScore,
+        'Total Marks': row.maxScore,
+        'Percentage': `${Math.round(row.percentage)}%`,
+        'Status': row.passed ? 'PASSED' : 'FAILED',
+        'Tab Switches': row.tabSwitches
+    }));
+    exportToCSV(csvData, `${leaderboard.data[0]?.exam?.title || 'Exam'}_Leaderboard`);
+    toast.success("CSV Downloaded!", { id: loadingToast });
+  };
 
   return (
     <div className="flex min-h-screen bg-surface">
@@ -50,43 +111,48 @@ export default function ExamResultsPage() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 pt-4 md:pt-8 pb-12 px-4 md:pl-64 md:pr-12 max-w-7xl mx-auto w-full">
-          {/* Desktop Title (Hidden on Mobile) */}
+          {/* Desktop Title */}
           <section className="mb-8 hidden md:flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-1">
               <Link
-                href="/teacher/results"
+                href="/teacher/exams"
                 className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-primary mb-3"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Back to Results
+                Back to Exams
               </Link>
               <h2 className="text-4xl font-extrabold font-headline text-on-surface tracking-tight">Exam Leaderboard</h2>
               <p className="text-on-surface-variant font-body font-medium text-sm md:text-lg">Detailed result analytics for your exam</p>
             </div>
             <div className="flex gap-3">
-              <a
-                href={`/api/teacher/exams/${examId}/results/export`}
+              <button
+                onClick={handleCSVExport}
                 className="tap-target px-6 py-3 flex items-center justify-center bg-surface-container-highest text-on-surface font-semibold rounded-xl hover:bg-surface-container-high transition-colors"
               >
                 <Download className="w-4 h-4 mr-2" />
                 <span>Export CSV</span>
-              </a>
-              <button className="tap-target px-6 py-3 flex items-center justify-center bg-primary text-on-primary font-semibold rounded-xl shadow-lg shadow-primary/20 hover:scale-[0.98] transition-transform">
+              </button>
+              <button 
+                onClick={handleFullPDFExport}
+                className="tap-target px-6 py-3 flex items-center justify-center bg-primary text-on-primary font-semibold rounded-xl shadow-lg shadow-primary/20 hover:scale-[0.98] transition-transform"
+              >
                 <Share className="w-4 h-4 mr-2" />
-                <span>Share Report</span>
+                <span>Print PDF Report</span>
               </button>
             </div>
           </section>
 
-          {/* Mobile Back Button fallback */}
+          {/* Mobile Actions */}
           <div className="md:hidden flex items-center justify-between mb-6">
-            <Link href="/teacher/results" className="p-2 text-primary hover:bg-slate-100 rounded-full">
+            <Link href="/teacher/exams" className="p-2 text-primary hover:bg-slate-100 rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <h1 className="text-lg font-bold font-headline truncate">Exam Leaderboard</h1>
-            <a href={`/api/teacher/exams/${examId}/results/export`} className="p-2 text-primary hover:bg-slate-100 rounded-full">
-              <Download className="w-5 h-5" />
-            </a>
+            <div className="flex gap-1">
+                <button onClick={handleCSVExport} className="p-2 text-primary hover:bg-slate-100 rounded-full">
+                    <Download className="w-5 h-5" />
+                </button>
+            </div>
           </div>
 
           {/* Metrics Horizontal Scroller on Mobile / Bento on Desktop */}
@@ -332,7 +398,6 @@ export default function ExamResultsPage() {
                   <p className="text-on-surface-variant font-body">{selectedStudent.student.email}</p>
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-surface-container-low p-4 rounded-2xl">
                   <p className="font-label text-[10px] font-bold text-outline uppercase mb-1">Final Score</p>
@@ -347,18 +412,23 @@ export default function ExamResultsPage() {
               </div>
 
               <div className="space-y-3">
-                <button className="flex justify-center items-center py-3 w-full bg-primary text-on-primary font-bold font-body rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
+                <Link 
+                  href={`/teacher/results/${selectedStudent.id}`}
+                  className="flex justify-center items-center py-3 w-full bg-surface-container-highest text-on-surface font-bold font-body rounded-2xl hover:bg-surface-container-high transition-colors"
+                >
                   <Eye className="w-5 h-5 mr-2" />
                   View Full Submission
-                </button>
-                <button className="flex justify-center items-center py-3 w-full bg-surface-container-highest text-on-surface font-bold font-body rounded-2xl hover:bg-surface-container-high transition-colors">
+                </Link>
+                
+                <button 
+                   className="flex justify-center items-center py-3 w-full bg-primary text-on-primary font-bold font-body rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                   onClick={() => handleDownloadHistory(selectedStudent.student.id, selectedStudent.student.name, selectedStudent.student.email)}
+                   disabled={isFetchingHistory}
+                >
                   <History className="w-5 h-5 mr-2" />
-                  Exam Logs
+                  {isFetchingHistory ? 'Preparing Report...' : 'Download Performance Report'}
                 </button>
-                <button className="flex justify-center items-center py-3 w-full bg-surface-container-highest text-on-surface font-bold font-body rounded-2xl hover:bg-surface-container-high transition-colors">
-                  <Mail className="w-5 h-5 mr-2" />
-                  Contact Student
-                </button>
+
                 <button 
                   className="flex justify-center items-center py-3 w-full text-error font-bold font-body rounded-2xl border border-error/20 hover:bg-error/5"
                   onClick={() => setSelectedStudent(null)}

@@ -217,7 +217,11 @@ export function AssessmentForm({ initial }: AssessmentFormProps) {
             text,
             isCorrect: q.correctAnswer === key
           })) : undefined,
-        testCases: q.type === 'CODE' ? q.testCases : undefined
+        testCases: q.type === 'CODE' ? q.testCases.map(tc => ({
+          input: tc.input || "",
+          expectedOutput: tc.expectedOutput || "",
+          isVisible: tc.isVisible ?? true
+        })) : undefined
       }));
 
       if (questionPayloads.length > 0) {
