@@ -19,6 +19,16 @@ export async function listExams(req: Request, res: Response, next: NextFunction)
   try {
     const teacherId = (req as any).userId;
 
+    // Sync: Auto-close expired exams for this teacher
+    await prisma.exam.updateMany({
+        where: {
+            teacherId,
+            status: { in: ['ACTIVE', 'PUBLISHED'] },
+            endTime: { lt: new Date() }
+        },
+        data: { status: 'CLOSED' }
+    });
+
     const page  = Math.max(1, parseInt(req.query.page  as string) || 1);
     const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
     const status = req.query.status as string | undefined;

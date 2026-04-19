@@ -12,14 +12,25 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useUser();
+  const role = (user?.publicMetadata?.role as string || 'student').toLowerCase();
+  const isStudent = role === 'student';
 
-  const navLinks = [
+  const teacherLinks = [
     { icon: Home, label: 'Dashboard', href: '/teacher/dashboard' },
     { icon: FileText, label: 'Exams', href: '/teacher/exams' },
     { icon: Users, label: 'Students', href: '/teacher/students' },
     { icon: BarChart, label: 'Results', href: '/teacher/results' },
     { icon: Settings, label: 'Settings', href: '/teacher/settings' },
   ];
+
+  const studentLinks = [
+    { icon: Home, label: 'Dashboard', href: '/student/dashboard' },
+    { icon: FileText, label: 'My Exams', href: '/student/exams' },
+    { icon: BarChart, label: 'My Gallery', href: '/student/gallery' }, // Placeholder for future
+    { icon: Settings, label: 'Settings', href: '/student/settings' },
+  ];
+
+  const navLinks = isStudent ? studentLinks : teacherLinks;
 
   return (
     <>

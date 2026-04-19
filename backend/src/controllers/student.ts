@@ -18,6 +18,17 @@ async function ensureEligibleExam(examId: string, studentId: string) {
     return { error: { status: 404, message: 'Exam not found' } };
   }
 
+  // Time-based locking: Check if exam has expired
+  if (exam.endTime && new Date() > new Date(exam.endTime)) {
+    if (exam.status !== 'CLOSED') {
+      await prisma.exam.update({
+        where: { id: exam.id },
+        data: { status: 'CLOSED' }
+      });
+    }
+    return { error: { status: 400, message: 'This exam has expired and is no longer available for attempts.' } };
+  }
+
   if (exam.status !== 'ACTIVE' && exam.status !== 'PUBLISHED') {
     return { error: { status: 400, message: 'Exam is not currently available' } };
   }
@@ -44,6 +55,17 @@ export async function getAssignedExams(req: Request, res: Response, next: NextFu
   try {
     const studentId = (req as any).userId;
 
+    // Sync: Auto-close expired exams for this student
+    const now = new Date();
+    await prisma.exam.updateMany({
+        where: {
+            assignments: { some: { studentId } },
+            status: { in: ['ACTIVE', 'PUBLISHED'] },
+            endTime: { lt: now }
+        },
+        data: { status: 'CLOSED' }
+    });
+
     const assignments = await prisma.examAssignment.findMany({
       where: { studentId },
       include: {
@@ -59,11 +81,6 @@ export async function getAssignedExams(req: Request, res: Response, next: NextFu
       },
       orderBy: { assignedAt: 'desc' }
     });
-
-    console.log(`[STUDENT] Found ${assignments.length} assignments for User ID: ${studentId}`);
-    if (assignments.length > 0) {
-      console.log(`[STUDENT] First assignment Exam: ${assignments[0].exam.title} (Status: ${assignments[0].exam.status})`);
-    }
 
     return res.json(assignments.map(a => ({
       ...a.exam,
@@ -385,6 +402,39 @@ export async function getStudentPerformanceSelf(req: Request, res: Response, nex
     });
 
     return res.json({ student, submissions });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMySubmissionDetail(req: Request, res: Response, next: NextFunction) {
+  try {
+    const studentId = (req as any).userId;
+    if (!studentId) return res.status(404).json({ error: 'Student not found' });
+
+    const submissionId = req.params.submissionId as string;
+    const submission = await prisma.result.findUnique({
+      where: { id: submissionId },
+      include: {
+        exam: {
+          include: {
+            questions: {
+              orderBy: { order: 'asc' },
+              include: { mcqOptions: true, testCases: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    
+    // Security check: ensure student owns this submission
+    if (submission.studentId !== studentId) {
+        return res.status(403).json({ error: 'You are not authorized to view this result.' });
+    }
+
+    return res.json(submission);
   } catch (err) {
     next(err);
   }

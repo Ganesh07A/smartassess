@@ -78,4 +78,25 @@ export const studentApi = {
 
   getPerformance: () =>
     api.get<{ student: any; submissions: any[] }>('/api/student/performance'),
+
+  getSubmissionResult: (submissionId: string) =>
+    api.get<DetailedSubmission>(`/api/student/results/${submissionId}`),
 };
+
+export interface DetailedSubmission {
+  id: string;
+  status: 'SUBMITTED' | 'GRADED';
+  totalScore: number;
+  maxScore: number;
+  percentage: number;
+  passed: boolean;
+  tabSwitches: number;
+  answers: Record<string, any>;
+  submittedAt: string;
+  exam: Exam & {
+    questions: (Question & {
+      mcqOptions: { id: string; text: string; isCorrect: boolean }[];
+      testCases: { id: string; input: string; expectedOutput: string; isVisible: boolean }[];
+    })[];
+  };
+}

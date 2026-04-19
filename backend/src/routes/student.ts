@@ -27,4 +27,9 @@ router.get('/performance', (req, res, next) => {
   return getStudentPerformanceSelf(req, res, next);
 });
 
+router.get('/results/:submissionId', (req, res, next) => {
+  const { getMySubmissionDetail } = require('../controllers/student');
+  return getMySubmissionDetail(req, res, next);
+});
+
 export default router;
