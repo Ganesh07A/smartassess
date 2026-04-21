@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Work+Sans:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
 
 @theme {
   --font-inter: "Inter", sans-serif;
@@ -23,6 +24,14 @@
   --color-primary-700: #1d4ed8;
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
+
+  /* Exam UI Specific Custom Colors */
+  --color-background-light: #f6f6f8;
+  --color-background-dark: #111621;
+  --color-neutral-border: #e5e7eb;
+  --color-status-answered: #22c55e;
+  --color-status-marked: #8b5cf6;
+  --color-status-not-visited: #f3f4f6;
 
   /* Stitch UI Colors */
   --color-secondary-fixed: #dbe1ff;

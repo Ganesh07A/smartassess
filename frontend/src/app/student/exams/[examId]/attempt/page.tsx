@@ -9,6 +9,9 @@ import {
 import { studentApi, ExamAttempt, CodingExecutionResult } from '@/lib/api/studentApi';
 import toast from 'react-hot-toast';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { MCQView } from '@/components/student/exam/MCQView';
+import { CodingView } from '@/components/student/exam/CodingView';
+import { QuestionPalette } from '@/components/student/exam/QuestionPalette';
 
 type AnswerValue =
   | { type: 'MCQ'; optionId: string }
@@ -18,6 +21,11 @@ const LANGUAGES = [
   { id: 63, name: 'JavaScript', ext: '.js' },
   { id: 71, name: 'Python', ext: '.py' }
 ];
+
+const TEMPLATES: Record<number, string> = {
+  63: "function solution() {\n    // Write your code here\n    \n}",
+  71: "def solution():\n    # Write your code here\n    pass"
+};
 
 export default function ExamAttemptPage() {
   const { examId } = useParams<{ examId: string }>();
@@ -183,8 +191,8 @@ export default function ExamAttemptPage() {
     if (currentQ.type !== 'CODING') return;
 
     const currentAnswer = (answers[currentQ.id] as { type: 'CODING'; code: string; languageId: number } | undefined);
-    const code = currentAnswer?.code || '';
     const languageId = currentAnswer?.languageId || 63;
+    const code = currentAnswer?.code || TEMPLATES[languageId] || '';
     
     if (!code.trim()) {
       toast.error('Code cannot be empty');
@@ -291,105 +299,25 @@ export default function ExamAttemptPage() {
     return `${m}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const textarea = e.currentTarget;
-    const { selectionStart, selectionEnd, value } = textarea;
-
-    // 1. Tab to 4 spaces
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const before = value.substring(0, selectionStart);
-      const after = value.substring(selectionEnd);
-      const newValue = before + '    ' + after;
-      updateAnswer(currentQ.id, { 
-        type: 'CODING', 
-        code: newValue, 
-        languageId: (answers[currentQ.id] as any)?.languageId || 63 
-      });
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = selectionStart + 4;
-      }, 0);
-      return;
-    }
-
-    // 2. Auto-pairing
-    const pairs: Record<string, string> = {
-      '(': ')',
-      '[': ']',
-      '{': '}',
-      '"': '"',
-      "'": "'"
-    };
-
-    if (pairs[e.key]) {
-      e.preventDefault();
-      const char = e.key;
-      const closing = pairs[char];
-      const before = value.substring(0, selectionStart);
-      const middle = value.substring(selectionStart, selectionEnd);
-      const after = value.substring(selectionEnd);
-      const newValue = before + char + middle + closing + after;
-      
-      updateAnswer(currentQ.id, { 
-        type: 'CODING', 
-        code: newValue, 
-        languageId: (answers[currentQ.id] as any)?.languageId || 63 
-      });
-      
-      setTimeout(() => {
-        textarea.selectionStart = selectionStart + 1;
-        textarea.selectionEnd = selectionEnd + 1;
-      }, 0);
-      return;
-    }
-
-    // 3. Smart Indent (Python/JS)
-    if (e.key === 'Enter') {
-      const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-      const currentLine = value.substring(lineStart, selectionStart);
-      
-      if (currentLine.trim().endsWith(':') || currentLine.trim().endsWith('{')) {
-        e.preventDefault();
-        const indentMatch = currentLine.match(/^\s*/);
-        const currentIndent = indentMatch ? indentMatch[0] : '';
-        const extraIndent = '    ';
-        const before = value.substring(0, selectionStart);
-        const after = value.substring(selectionEnd);
-        const newValue = before + '\n' + currentIndent + extraIndent + after;
-        
-        updateAnswer(currentQ.id, { 
-          type: 'CODING', 
-          code: newValue, 
-          languageId: (answers[currentQ.id] as any)?.languageId || 63 
-        });
-        
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = selectionStart + 1 + currentIndent.length + extraIndent.length;
-        }, 0);
-        return;
-      }
-    }
-  };
-
   return (
-    <div className={`h-screen bg-[#faf8ff] flex flex-col font-sans select-none selection:bg-indigo-100 selection:text-indigo-900 transition-all duration-700 overflow-hidden ${!isFullscreen ? 'filter blur-xl scale-[1.02]' : ''}`}>
+    <div className={`h-screen bg-background-light flex flex-col font-sans select-none transition-all duration-700 overflow-hidden ${!isFullscreen ? 'filter blur-xl scale-[1.02]' : ''}`}>
       
       {/* Fullscreen Lock Overlay */}
       {!isFullscreen && isStarted && !isSubmittingRef.current && (
-        <div className="fixed inset-0 z-[200] bg-[#131b2e]/80 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[200] bg-background-dark/80 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-500">
           <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-[0_48px_96px_-12px_rgba(19,27,46,0.3)] border border-white/50 text-center space-y-8 animate-in zoom-in-95 duration-700">
              <div className="w-24 h-24 bg-rose-50 text-rose-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-inner">
                 <AlertCircle className="w-12 h-12" />
              </div>
              <div className="space-y-3">
-                <h2 className="text-2xl font-black text-[#131b2e] tracking-tight">Fullscreen Required</h2>
-                <p className="text-sm font-medium text-[#464555] leading-relaxed">
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Fullscreen Required</h2>
+                <p className="text-sm font-medium text-gray-600 leading-relaxed">
                   To ensure academic integrity, this assessment must be taken in full-screen mode. Your progress has been paused.
                 </p>
              </div>
              <button 
                onClick={toggleFullscreen}
-               className="w-full py-5 bg-indigo-600 text-white text-sm font-black rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+               className="w-full py-5 bg-primary text-white text-sm font-black rounded-2xl shadow-lg hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
              >
                Resume Examination <Shield className="w-5 h-5" />
              </button>
@@ -406,384 +334,95 @@ export default function ExamAttemptPage() {
         onConfirm={() => handleSubmit(true)}
         onCancel={() => setShowSubmitModal(false)}
       />
-      {/* Premium Header Bar */}
-      <header className="h-20 bg-white/80 backdrop-blur-3xl border-b border-[#c7c4d815] px-8 flex items-center justify-between sticky top-0 z-50">
-         <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                  <Shield className="w-5 h-5 text-white" />
-               </div>
-               <div>
-                  <h2 className="text-sm font-black text-[#131b2e] line-clamp-1 max-w-[240px] tracking-tight">{exam?.title}</h2>
-                  <p className="text-[10px] font-black text-[#777587] uppercase tracking-widest">Secure Examination</p>
-               </div>
-            </div>
-            
-            <div className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all duration-500 ${
-               timeLeft < 300 ? 'bg-rose-50 text-rose-600 shadow-sm shadow-rose-100 animate-pulse' : 'bg-[#f2f3ff] text-indigo-600'
-            }`}>
-               <Clock className={`w-4 h-4 ${timeLeft < 300 ? 'text-rose-600' : 'text-indigo-600'}`} /> 
-               <span className="text-sm font-black tabular-nums tracking-tight">{formatTime(timeLeft)}</span>
-            </div>
-         </div>
 
-         <div className="flex items-center gap-6">
-             <div className="h-10 w-px bg-[#c7c4d830] hidden sm:block" />
-             <div className="hidden sm:flex flex-col items-end">
-               <p className="text-[10px] font-black text-[#777587] uppercase tracking-[0.2em] mb-0.5">Progress</p>
-               <p className="text-xs font-black text-[#131b2e]">Question {currentQIndex + 1} <span className="text-[#c7c4d8]">/</span> {exam?.questions.length}</p>
-             </div>
-             <button 
-               onClick={() => handleSubmit()}
-               className="px-8 py-3.5 bg-[#131b2e] text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-2xl hover:bg-[#283044] hover:shadow-[0_12px_24px_-8px_rgba(19,27,46,0.3)] transition-all duration-300"
-             >
-               Submit Exam
-             </button>
-         </div>
+      {/* Top Navbar */}
+      <header className="h-16 border-b border-neutral-border px-6 flex flex-shrink-0 items-center justify-between bg-white z-50">
+        <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-1.5 rounded-lg text-primary">
+                <span className="material-symbols-outlined text-2xl">terminal</span>
+            </div>
+            <h1 className="text-lg font-semibold tracking-tight truncate max-w-[150px] sm:max-w-sm">{exam?.title} - Student Assessment</h1>
+        </div>
+        <div className="flex items-center gap-6">
+            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border ${timeLeft < 300 ? 'bg-red-50 text-red-600 border-red-100 animate-pulse' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                <span className="material-symbols-outlined text-xl">timer</span>
+                <span className="font-mono font-bold">{formatTime(timeLeft)}</span>
+            </div>
+            <div className="h-8 w-[1px] bg-neutral-border hidden sm:block"></div>
+            <button 
+                onClick={() => handleSubmit()}
+                className="bg-primary hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm hidden sm:block"
+            >
+                Submit Exam
+            </button>
+        </div>
       </header>
 
-      <div className="flex-1 flex flex-row-reverse overflow-hidden">
-         {/* Premium Sidebar: Moved to Right Side */}
-         <aside className="w-16 sm:w-80 border-l border-[#c7c4d815] hidden lg:flex flex-col bg-[#fcfdfe]">
-            <div className="p-8">
-               <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-[11px] font-black text-[#777587] uppercase tracking-[0.2em]">Navigation</h3>
-                  <div className="px-2 py-0.5 bg-[#f2f3ff] rounded-lg">
-                    <span className="text-[9px] font-black text-indigo-600 uppercase tracking-tight">Part A</span>
-                  </div>
-               </div>
-               
-               <div className="grid grid-cols-5 gap-3">
-                 {exam?.questions.map((_, idx) => (
-                   <button 
-                     key={idx}
-                     onClick={() => navigateToQ(idx)}
-                     className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[11px] font-black transition-all duration-300 ${
-                       currentQIndex === idx 
-                        ? 'bg-indigo-600 text-white shadow-[0_8px_16px_-4px_rgba(79,70,229,0.4)] scale-110' 
-                        : answers[exam!.questions[idx].id] 
-                          ? 'bg-[#f2f3ff] text-indigo-600 border border-indigo-100' 
-                          : 'bg-white text-[#777587] hover:bg-[#faf8ff] hover:text-[#131b2e] border border-[#c7c4d815]'
-                     }`}
-                   >
-                     {(idx + 1).toString().padStart(2, '0')}
-                   </button>
-                 ))}
-               </div>
-            </div>
-            
-            <div className="mt-auto p-8 space-y-6">
-               <div className="p-6 bg-white rounded-[2rem] border border-[#c7c4d815] shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                     <p className="text-[10px] font-black text-[#777587] uppercase tracking-widest">Health & Security</p>
-                     <div className={`w-2 h-2 rounded-full ${tabSwitches < 2 ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-                  </div>
-                  <div className="space-y-4">
-                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#464555]">Tab Switches</span>
-                        <span className={`text-xs font-black ${tabSwitches > 0 ? 'text-rose-600' : 'text-[#777587]'}`}>{tabSwitches} / {SWITCH_LIMIT}</span>
-                     </div>
-                     <div className="w-full h-1.5 bg-[#f2f3ff] rounded-full overflow-hidden">
-                        <div 
-                           className={`h-full transition-all duration-1000 ${tabSwitches >= 2 ? 'bg-rose-500' : 'bg-indigo-500'}`} 
-                           style={{ width: `${(tabSwitches / SWITCH_LIMIT) * 100}%` }} 
-                        />
-                     </div>
-                  </div>
-               </div>
-               
-               <div className="flex items-center gap-3 px-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                  <span className="text-[10px] font-black text-[#777587] uppercase tracking-widest leading-none">Connection Stable</span>
-               </div>
-            </div>
-         </aside>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        {/* Left Side: Problem & Editor / MCQ View (70%) */}
+        <section className="w-full lg:w-[70%] flex flex-col overflow-y-auto lg:overflow-hidden bg-[#fcfcfd]">
+            {currentQ.type === 'MCQ' ? (
+                <div className="p-4 lg:p-8 flex-1 overflow-y-auto custom-scrollbar">
+                    <MCQView 
+                        question={currentQ}
+                        currentAnswer={answers[currentQ.id] as { type: 'MCQ', optionId: string }}
+                        index={currentQIndex}
+                        total={exam!.questions.length}
+                        onAnswerChange={(optionId) => updateAnswer(currentQ.id, { type: 'MCQ', optionId })}
+                    />
+                </div>
+            ) : (
+                <CodingView 
+                    question={currentQ}
+                    currentAnswer={answers[currentQ.id] as { type: 'CODING', code: string, languageId: number }}
+                    onAnswerChange={(code, languageId) => updateAnswer(currentQ.id, { type: 'CODING', code, languageId })}
+                    isRunning={isRunning}
+                    executionResult={executionResult}
+                    handleRunCode={handleRunCode}
+                    templates={TEMPLATES}
+                />
+            )}
+        </section>
+        
+        {/* Right Side: Question Palette (30%) */}
+        <aside className="w-full lg:w-[30%] flex flex-col bg-white border-t lg:border-t-0 lg:border-l border-neutral-border overflow-hidden">
+            <QuestionPalette 
+                questions={exam!.questions}
+                answers={answers}
+                currentIndex={currentQIndex}
+                onNavigate={navigateToQ}
+            />
+        </aside>
+      </main>
 
-          {/* Main Content: Focused Editorial Flow */}
-          <main className="flex-1 overflow-hidden bg-[#faf8ff] flex flex-col">
-            <div className="max-w-5xl mx-auto w-full h-full p-8 md:p-12 lg:p-16 flex flex-col space-y-12">
-               
-               {/* Question Section: Editorial Style - Smaller for fixed layout */}
-               <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-700 max-h-[25%] overflow-y-auto custom-scrollbar flex-shrink-0 pr-4">
-                  <div className="flex items-center gap-4">
-                     <span className="px-4 py-1.5 bg-white border border-[#c7c4d830] text-indigo-600 text-[10px] font-black rounded-full uppercase tracking-[0.2em] shadow-sm">{currentQ.type}</span>
-                     <span className="text-[10px] font-black text-[#777587] uppercase tracking-widest leading-none">{currentQ.marks} Marks Available</span>
-                  </div>
-                  <h1 className="text-2xl md:text-3xl font-black text-[#131b2e] leading-[1.2] tracking-tight">
-                    {currentQ.text}
-                  </h1>
-               </div>
-
-               {/* Interaction Section: Large Focused Cards */}
-               <div className="flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-1000 overflow-hidden flex flex-col lg:border lg:border-[#c7c4d815] lg:rounded-[2rem] lg:bg-white lg:shadow-xl lg:shadow-[#c7c4d808]">
-                  {currentQ.type === 'MCQ' ? (
-                    <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
-                      {currentQ.mcqOptions?.map((opt) => (
-                        <button 
-                          key={opt.id}
-                          onClick={() => updateAnswer(currentQ.id, { type: 'MCQ', optionId: opt.id })}
-                          className={`p-8 rounded-[2rem] border-2 text-left transition-all duration-300 flex items-start gap-6 group hover:translate-y-[-2px] ${
-                            (answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id 
-                             ? 'bg-white border-indigo-600 shadow-md' 
-                             : 'bg-white border-[#f0f1f7] hover:border-[#c7c4d860]'
-                          }`}
-                        >
-                           <div className={`mt-1 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
-                             (answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id 
-                              ? 'bg-indigo-600 border-indigo-600 scale-110 shadow-lg shadow-indigo-100' 
-                              : 'border-[#c7c4d860] group-hover:border-indigo-200'
-                           }`}>
-                                {(answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id && <CheckCircle className="w-4 h-4 text-white" />}
-                           </div>
-                           <div className="space-y-1 flex-1">
-                              <span className={`text-base font-black tracking-tight leading-snug transition-colors duration-300 ${
-                                 (answers[currentQ.id] as { type: 'MCQ'; optionId: string } | undefined)?.optionId === opt.id ? 'text-[#131b2e]' : 'text-[#464555]'
-                              }`}>
-                                 {opt.text}
-                              </span>
-                           </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                      {/* Fixed Layout: Results ABOVE, Editor BELOW */}
-                      
-                      {/* Test Cases / Execution Result Section - FIXED POSITION TOP */}
-                      <div className="p-8 border-b border-[#c7c4d815] bg-[#fcfdfe] max-h-[40%] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-4 duration-700">
-                        {executionResult ? (
-                          <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                 <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Execution Report</h3>
-                                 <p className="text-xs font-black text-[#131b2e]">Session Analysis Complete</p>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <span className="text-sm font-black text-indigo-600">{executionResult.passedCount} / {executionResult.totalCount} Passed</span>
-                                <div className="w-32 h-1.5 bg-[#f2f3ff] rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-indigo-600 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(79,70,229,0.3)]" 
-                                    style={{ width: `${(executionResult.passedCount / executionResult.totalCount) * 100}%` }} 
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {executionResult.details.map((res, idx) => (
-                                <div key={idx} className="p-5 bg-white border border-[#c7c4d815] rounded-2xl hover:border-indigo-100 transition-all group">
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-3">
-                                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${res.passed ? 'bg-emerald-50 text-emerald-600 shadow-sm' : 'bg-rose-50 text-rose-600 shadow-sm'}`}>
-                                          {res.passed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                                       </div>
-                                       <span className="text-[10px] font-black text-[#131b2e] uppercase tracking-widest block">CASE {idx + 1}</span>
-                                    </div>
-                                    <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${res.passed ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                      {res.status}
-                                    </span>
-                                  </div>
-
-                                  {!res.passed && (
-                                    <div className="space-y-3 mt-4 border-t border-[#c7c4d810] pt-4">
-                                      <div className="space-y-1.5">
-                                        <p className="text-[8px] font-black text-[#777587] uppercase tracking-widest">Expected</p>
-                                        <pre className="p-3 bg-[#faf8ff] rounded-xl text-[10px] font-mono text-indigo-600 overflow-x-auto whitespace-pre-wrap">
-                                          {res.expectedOutput || 'No output'}
-                                        </pre>
-                                      </div>
-                                      <div className="space-y-1.5">
-                                        <p className="text-[8px] font-black text-[#777587] uppercase tracking-widest">Actual</p>
-                                        <pre className={`p-3 rounded-xl text-[10px] font-mono overflow-x-auto whitespace-pre-wrap ${res.actualOutput === null ? 'bg-rose-50 text-rose-400 italic' : 'bg-rose-50/50 text-rose-600'}`}>
-                                          {res.actualOutput ?? 'No output'}
-                                        </pre>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {res.passed && (
-                                    <div className="mt-2 text-[10px] font-bold text-emerald-600/60 font-mono pl-11">
-                                      ✓ Output matched expectations
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                               <h3 className="text-[10px] font-black text-[#777587] uppercase tracking-[0.2em]">Required Test Cases</h3>
-                               <div className="flex gap-1.5 opacity-20">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-[#131b2e]" />
-                                 <div className="w-1.5 h-1.5 rounded-full bg-[#131b2e]" />
-                               </div>
-                            </div>
-                            {currentQ.testCases && currentQ.testCases.length > 0 && (
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                 {currentQ.testCases.map((tc, idx) => (
-                                   <div key={idx} className="p-5 bg-white border border-[#c7c4d815] rounded-2xl group">
-                                      <div className="flex items-center gap-2 mb-3 text-[#777587]">
-                                         <AlertCircle className="w-3 h-3" />
-                                         <p className="text-[8px] font-black uppercase tracking-widest">Sample {idx+1}</p>
-                                      </div>
-                                      <div className="flex flex-col gap-2">
-                                         <div className="flex items-center justify-between">
-                                            <span className="text-[7px] font-black text-[#c7c4d8] uppercase tracking-widest">In</span>
-                                            <span className="text-[10px] font-mono text-[#131b2e] truncate max-w-[60%]">{tc.input || 'None'}</span>
-                                         </div>
-                                         <div className="flex items-center justify-between">
-                                            <span className="text-[7px] font-black text-[#c7c4d8] uppercase tracking-widest">Out</span>
-                                            <span className="text-[10px] font-mono text-indigo-600 font-bold truncate max-w-[60%]">{tc.expectedOutput}</span>
-                                         </div>
-                                      </div>
-                                   </div>
-                                 ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Header for Editor */}
-                      <div className="px-8 py-4 bg-white border-b border-[#c7c4d815] flex items-center justify-between flex-shrink-0">
-                         <div className="flex items-center gap-6">
-                            <div className="flex bg-[#f2f3ff] p-1 rounded-xl">
-                              {LANGUAGES.map(lang => (
-                                <button
-                                  key={lang.id}
-                                  onClick={() => {
-                                    const existing = (answers[currentQ.id] as any);
-                                    updateAnswer(currentQ.id, { 
-                                      type: 'CODING', 
-                                      code: existing?.code || '', 
-                                      languageId: lang.id 
-                                    });
-                                  }}
-                                  className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                                    ((answers[currentQ.id] as any)?.languageId || 63) === lang.id 
-                                      ? 'bg-white text-indigo-600 shadow-sm' 
-                                      : 'text-[#777587] hover:text-[#131b2e]'
-                                  }`}
-                                >
-                                  {lang.name}
-                                </button>
-                              ))}
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                               <Terminal className="w-3.5 h-3.5 text-indigo-400" />
-                               <span className="text-[10px] font-black text-[#777587] uppercase tracking-[0.2em]">
-                                 FILE.EXT: <span className="text-[#131b2e]">{LANGUAGES.find(l => l.id === ((answers[currentQ.id] as any)?.languageId || 63))?.ext}</span>
-                               </span>
-                            </div>
-                         </div>
-                         
-                         <button 
-                           disabled={isRunning}
-                           onClick={handleRunCode}
-                           className="flex items-center gap-2.5 px-6 py-2.5 bg-[#131b2e] hover:bg-[#283044] text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-xl transition-all disabled:opacity-50 active:scale-95 shadow-md shadow-[#131b2e]/10"
-                         >
-                           {isRunning ? (
-                             <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                           ) : (
-                             <><Play className="w-3 h-3" /> Execute Session</>
-                           )}
-                         </button>
-                      </div>
-
-                      {/* IDE Section - EXPANDED */}
-                      <div className="flex-1 min-h-0 flex bg-[#131b2e] relative group">
-                          {/* Gutter */}
-                          <div className="w-12 bg-white/[0.02] border-r border-white/5 flex flex-col items-center pt-8 select-none flex-shrink-0">
-                             {[...Array(30)].map((_, i) => (
-                               <span key={i} className="text-[10px] font-mono text-white/20 h-[1.5rem] leading-relaxed">
-                                 {(i + 1).toString().padStart(2, '0')}
-                               </span>
-                             ))}
-                          </div>
-                          <textarea 
-                            spellCheck={false}
-                            value={(answers[currentQ.id] as any)?.code || ''}
-                            onKeyDown={handleEditorKeyDown}
-                            onChange={(e) => {
-                              const existing = (answers[currentQ.id] as any);
-                              updateAnswer(currentQ.id, { 
-                                type: 'CODING', 
-                                code: e.target.value, 
-                                languageId: existing?.languageId || 63 
-                              });
-                            }}
-                            className="flex-1 bg-transparent p-8 pb-16 text-indigo-100 font-mono text-sm outline-none resize-none leading-[1.5rem] placeholder:text-white/10 selection:bg-indigo-500/40 overflow-y-auto custom-scrollbar"
-                            placeholder="// Start typing your solution here..."
-                          />
-                          
-                          {/* Hint Bar / Cheat Sheet */}
-                          <div className="absolute bottom-6 right-8 left-20 px-6 py-3 bg-indigo-600/10 backdrop-blur-md border border-white/5 rounded-2xl flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                             <div className="flex items-center gap-6">
-                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Methods Hint:</span>
-                                <div className="flex gap-4">
-                                   <span className="text-[9px] font-mono text-white/40">sort()</span>
-                                   <span className="text-[9px] font-mono text-white/40">map()</span>
-                                   <span className="text-[9px] font-mono text-white/40">max()</span>
-                                   <span className="text-[9px] font-mono text-white/40">min()</span>
-                                </div>
-                             </div>
-                             <span className="text-[8px] font-black text-white/20 uppercase tracking-tighter">IDE v2.0 READY</span>
-                          </div>
-                      </div>
-                    </div>
-                  )}
-               </div>
-
-               {/* Premium Navigation Controls */}
-               <div className="flex items-center justify-between pt-16 border-t border-[#c7c4d810] animate-in fade-in duration-1000">
-                  <button 
-                    disabled={currentQIndex === 0}
-                    onClick={() => navigateToQ(currentQIndex - 1)}
-                    className="flex items-center gap-3 text-[11px] font-black text-[#777587] hover:text-[#131b2e] disabled:opacity-20 disabled:cursor-not-allowed transition-all uppercase tracking-[0.2em] group"
-                  >
-                     <div className="w-10 h-10 rounded-full border border-[#c7c4d830] flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
-                        <ChevronLeft className="w-4 h-4" />
-                     </div>
-                     Previous
-                  </button>
-                  
-                  <div className="flex gap-4">
-                    {currentQIndex < exam!.questions.length - 1 ? (
-                      <button 
-                        onClick={() => navigateToQ(currentQIndex + 1)}
-                        className="px-12 py-5 bg-white text-[#131b2e] border border-[#c7c4d840] text-xs font-black rounded-[2rem] shadow-[0_8px_24px_-8px_rgba(19,27,46,0.1)] hover:shadow-[0_12px_32px_-8px_rgba(19,27,46,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 uppercase tracking-widest"
-                      >
-                        Next Question <ChevronRight className="w-4 h-4" />
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => handleSubmit()}
-                        className="px-16 py-5 bg-indigo-600 text-white text-xs font-black rounded-[2rem] shadow-[0_20px_40px_-12px_rgba(79,70,229,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(79,70,229,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 uppercase tracking-widest"
-                      >
-                        Finish & Submit <CheckCircle className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-               </div>
-
-            </div>
-         </main>
-      </div>
-
-      {/* Premium Mobile Navigation */}
-      <div className="lg:hidden h-24 bg-white/80 backdrop-blur-3xl border-t border-[#c7c4d815] px-8 flex items-center justify-between z-50">
-         <div className="flex flex-col">
-            <span className="text-[10px] font-black text-[#777587] uppercase tracking-widest">Question</span>
-            <span className="text-sm font-black text-[#131b2e]">{currentQIndex+1} / {exam?.questions.length}</span>
-         </div>
-         <div className="flex gap-3">
-            <button onClick={() => navigateToQ(Math.max(0, currentQIndex - 1))} className="w-12 h-12 bg-[#f2f3ff] text-indigo-600 rounded-2xl flex items-center justify-center active:scale-95 transition-all"><ChevronLeft className="w-5 h-5" /></button>
-            <button onClick={() => navigateToQ(Math.min(exam!.questions.length - 1, currentQIndex + 1))} className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center active:scale-95 transition-all shadow-lg shadow-indigo-100"><ChevronRight className="w-5 h-5" /></button>
-         </div>
-      </div>
-
+      {/* Bottom Navigation Footer */}
+      <footer className="h-16 flex-shrink-0 border-t border-neutral-border px-6 flex items-center justify-between bg-white z-[60]">
+        <button 
+            disabled={currentQIndex === 0}
+            onClick={() => navigateToQ(currentQIndex - 1)}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+            <span className="material-symbols-outlined">chevron_left</span>
+            <span className="hidden sm:inline">Previous</span>
+        </button>
+        <div className="flex items-center gap-4">
+            <button className="flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg border border-status-marked text-status-marked font-semibold hover:bg-purple-50 transition-colors">
+                <span className="material-symbols-outlined">bookmark</span>
+                <span className="hidden sm:inline">Mark for Review</span>
+            </button>
+            <button 
+                onClick={() => {
+                    if (currentQIndex < exam!.questions.length - 1) navigateToQ(currentQIndex + 1);
+                    else handleSubmit();
+                }}
+                className="flex items-center gap-2 px-6 sm:px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
+            >
+                {currentQIndex < exam!.questions.length - 1 ? 'Save & Next' : 'Finish'}
+                <span className="material-symbols-outlined">chevron_right</span>
+            </button>
+        </div>
+      </footer>
     </div>
   );
 }

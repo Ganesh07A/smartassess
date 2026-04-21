@@ -141,8 +141,61 @@ export async function evaluateCodingSubmission(
   const { languageId: defaultLangId } = getJudge0Config();
   const targetLangId = languageId || defaultLangId;
 
+  let finalSourceCode = sourceCode;
+
+  if (targetLangId === 63) { // JavaScript
+    finalSourceCode += `
+
+// --- Auto-injected system wrapper ---
+const fs = require('fs');
+try {
+  const rawInput = fs.readFileSync(0, 'utf-8');
+  if (rawInput.trim()) {
+    const args = JSON.parse(rawInput);
+    const res = solution(...args);
+    if (res !== undefined) {
+      if (typeof res === 'object') console.log(JSON.stringify(res));
+      else console.log(res);
+    }
+  } else {
+    const res = solution();
+    if (res !== undefined) {
+      if (typeof res === 'object') console.log(JSON.stringify(res));
+      else console.log(res);
+    }
+  }
+} catch (e) {
+  console.error("Execution Error:", e.message);
+}
+`;
+  } else if (targetLangId === 71) { // Python
+    finalSourceCode += `
+
+# --- Auto-injected system wrapper ---
+import sys, json
+try:
+    raw_input = sys.stdin.read()
+    if raw_input.strip():
+        args = json.loads(raw_input)
+        res = solution(*args)
+    else:
+        res = solution()
+        
+    if res is not None:
+        if isinstance(res, (dict, list)):
+            print(json.dumps(res))
+        else:
+            if isinstance(res, bool):
+                print(str(res).lower())
+            else:
+                print(res)
+except Exception as e:
+    print("Execution Error:", e)
+`;
+  }
+
   const details = await Promise.all(
-    testCases.map((testCase) => runTestCase(sourceCode, testCase.input, testCase.expectedOutput, targetLangId)),
+    testCases.map((testCase) => runTestCase(finalSourceCode, testCase.input, testCase.expectedOutput, targetLangId)),
   );
 
   return {

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Technical Assessment | Software Engineering</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#ffffff",
+                        "background-dark": "#111621",
+                        "neutral-border": "#e5e7eb",
+                        "status-answered": "#22c55e",
+                        "status-marked": "#8b5cf6",
+                        "status-not-visited": "#f3f4f6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-editor { font-family: 'JetBrains Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    </style>
+</head>
+<body class="bg-background-light text-[#111827] h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="h-16 border-b border-neutral-border px-6 flex items-center justify-between bg-white z-50">
+<div class="flex items-center gap-3">
+<div class="bg-primary/10 p-1.5 rounded-lg text-primary">
+<span class="material-symbols-outlined text-2xl">code</span>
+</div>
+<h1 class="text-lg font-semibold tracking-tight">Technical Assessment: Senior Software Engineer</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 px-4 py-1.5 bg-red-50 text-red-600 rounded-full border border-red-100">
+<span class="material-symbols-outlined text-xl">timer</span>
+<span class="font-mono font-bold">01:14:22</span>
+</div>
+<div class="h-8 w-[1px] bg-neutral-border"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</p>
+<p class="text-sm font-semibold">Alex Thompson</p>
+</div>
+<div class="size-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">
+                    AT
+                </div>
+</div>
+<button class="bg-primary hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm">
+                Submit Exam
+            </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Side: Problem & Editor (70%) -->
+<div class="w-[70%] flex flex-col border-r border-neutral-border bg-[#fcfcfd]">
+<!-- Problem Description Area -->
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<div class="max-w-4xl">
+<div class="flex items-center gap-2 mb-4">
+<span class="px-2.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded uppercase tracking-wide">Question 13 of 50</span>
+<span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-xs font-bold rounded uppercase tracking-wide">Medium</span>
+<span class="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-xs font-bold rounded uppercase tracking-wide">10 Points</span>
+</div>
+<h2 class="text-3xl font-bold mb-6 text-gray-900">Longest Common Prefix</h2>
+<div class="prose prose-slate max-w-none text-gray-700 leading-relaxed space-y-4">
+<p>Write a function to find the longest common prefix string amongst an array of strings.</p>
+<p>If there is no common prefix, return an empty string <code class="bg-gray-100 px-1 rounded text-pink-600 font-mono">""</code>.</p>
+<div class="mt-8 space-y-6">
+<div>
+<h4 class="text-sm font-bold text-gray-900 uppercase tracking-tight mb-2">Example 1:</h4>
+<div class="bg-gray-50 border border-neutral-border rounded-lg p-4 font-mono text-sm">
+<p><span class="text-gray-500">Input:</span> strs = ["flower","flow","flight"]</p>
+<p><span class="text-gray-500">Output:</span> "fl"</p>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-bold text-gray-900 uppercase tracking-tight mb-2">Example 2:</h4>
+<div class="bg-gray-50 border border-neutral-border rounded-lg p-4 font-mono text-sm">
+<p><span class="text-gray-500">Input:</span> strs = ["dog","racecar","car"]</p>
+<p><span class="text-gray-500">Output:</span> ""</p>
+<p class="mt-2 text-gray-400 italic">Explanation: There is no common prefix among the input strings.</p>
+</div>
+</div>
+<div class="pt-4">
+<h4 class="text-sm font-bold text-gray-900 uppercase tracking-tight mb-2">Constraints:</h4>
+<ul class="list-disc pl-5 space-y-1 text-sm text-gray-600">
+<li><code class="bg-gray-100 px-1 rounded">1 &lt;= strs.length &lt;= 200</code></li>
+<li><code class="bg-gray-100 px-1 rounded">0 &lt;= strs[i].length &lt;= 200</code></li>
+<li><code class="bg-gray-100 px-1 rounded">strs[i]</code> consists of only lowercase English letters.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Code Editor Section -->
+<div class="h-[450px] border-t border-neutral-border flex flex-col bg-white">
+<!-- Editor Toolbar -->
+<div class="h-12 border-b border-neutral-border flex items-center justify-between px-4 bg-gray-50/50">
+<div class="flex items-center gap-4">
+<div class="relative">
+<select class="appearance-none bg-white border border-neutral-border rounded px-3 py-1 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20">
+<option>Python 3</option>
+<option>Java (OpenJDK 11)</option>
+<option>C++ (GCC 9.2)</option>
+<option>JavaScript (Node.js 16)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1.5 text-gray-400 pointer-events-none text-sm">expand_more</span>
+</div>
+<button class="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-lg">settings</span>
+                            Settings
+                        </button>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1 text-sm font-bold text-gray-700 hover:bg-gray-200 rounded transition-colors">
+<span class="material-symbols-outlined text-lg">play_arrow</span>
+                            Run Code
+                        </button>
+<button class="flex items-center gap-1.5 px-3 py-1 text-sm font-bold text-primary hover:bg-primary/10 rounded transition-colors">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+                            Run All Tests
+                        </button>
+</div>
+</div>
+<!-- Code Area -->
+<div class="flex-1 flex overflow-hidden code-editor">
+<!-- Line Numbers -->
+<div class="w-12 bg-gray-50 border-r border-neutral-border flex flex-col items-center py-4 text-gray-400 text-xs select-none">
+<span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+</div>
+<!-- Text Area -->
+<div class="flex-1 p-4 text-sm leading-relaxed overflow-y-auto custom-scrollbar">
+<pre class="text-[#1e293b]"><span class="text-purple-600">class</span> <span class="text-blue-600">Solution</span>:
+    <span class="text-purple-600">def</span> <span class="text-blue-600">longestCommonPrefix</span>(<span class="text-orange-600">self</span>, <span class="text-orange-600">strs</span>: List[<span class="text-green-600">str</span>]) -&gt; <span class="text-green-600">str</span>:
+        <span class="text-gray-400"># Write your solution here</span>
+        <span class="text-purple-600">if not</span> strs:
+            <span class="text-purple-600">return</span> <span class="text-green-700">""</span>
+            
+        prefix = strs[<span class="text-blue-500">0</span>]
+        <span class="text-purple-600">for</span> i <span class="text-purple-600">in</span> <span class="text-green-600">range</span>(<span class="text-blue-500">1</span>, <span class="text-green-600">len</span>(strs)):
+            <span class="text-purple-600">while</span> strs[i].find(prefix) != <span class="text-blue-500">0</span>:
+                prefix = prefix[:<span class="text-green-600">len</span>(prefix) - <span class="text-blue-500">1</span>]
+                <span class="text-purple-600">if not</span> prefix:
+                    <span class="text-purple-600">return</span> <span class="text-green-700">""</span>
+        <span class="text-purple-600">return</span> prefix</pre>
+<div class="w-[2px] h-5 bg-primary animate-pulse inline-block align-middle ml-1"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Side: Navigation Palette (30%) -->
+<aside class="w-[30%] flex flex-col bg-white">
+<div class="p-6 border-b border-neutral-border">
+<h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">grid_view</span>
+                    Question Palette
+                </h3>
+<!-- Status Legend -->
+<div class="grid grid-cols-2 gap-3 mb-6">
+<div class="flex items-center gap-2">
+<div class="size-4 rounded-sm bg-status-answered shadow-sm border border-black/5"></div>
+<span class="text-xs font-medium text-gray-600">Answered (12)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-4 rounded-sm bg-status-marked shadow-sm border border-black/5"></div>
+<span class="text-xs font-medium text-gray-600">Marked (3)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-4 rounded-sm border-2 border-primary"></div>
+<span class="text-xs font-medium text-gray-600">Current (1)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-4 rounded-sm bg-status-not-visited border border-neutral-border"></div>
+<span class="text-xs font-medium text-gray-600">Not Visited (34)</span>
+</div>
+</div>
+<!-- Progress Bar -->
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider">
+<span>Overall Progress</span>
+<span>24%</span>
+</div>
+<div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 24%"></div>
+</div>
+</div>
+</div>
+<!-- Scrollable Grid -->
+<div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+<div class="grid grid-cols-5 gap-3">
+<!-- Iterating Grid Items Mockup -->
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white hover:opacity-90 transition-opacity">1</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">2</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-marked text-white">3</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">4</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">5</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">6</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">7</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-marked text-white">8</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">9</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">10</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">11</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-answered text-white">12</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold border-2 border-primary text-primary bg-primary/5">13</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-not-visited text-gray-600 border border-neutral-border hover:bg-gray-200">14</button>
+<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-marked text-white">15</button>
+<!-- Fillers -->
+<script>
+                        for(let i=16; i<=50; i++) {
+                            document.write(`<button class="aspect-square flex items-center justify-center rounded-lg text-sm font-bold bg-status-not-visited text-gray-600 border border-neutral-border hover:bg-gray-200 transition-colors">${i}</button>`);
+                        }
+                    </script>
+</div>
+</div>
+</aside>
+</main>
+<!-- Bottom Action Bar -->
+<footer class="h-16 border-t border-neutral-border px-6 flex items-center justify-between bg-white z-50">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-gray-700 hover:bg-gray-100 border border-neutral-border transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+                Previous
+            </button>
+<button class="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-white bg-primary hover:bg-blue-700 transition-colors">
+                Next
+                <span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<span class="text-sm font-semibold text-gray-600">Mark for Review</span>
+<button class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-primary" role="switch">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-neutral-border"></div>
+<button class="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-bold transition-colors">
+<span class="material-symbols-outlined text-xl">report</span>
+                Report Problem
+            </button>
+</div>
+</footer>
+</body></html>

@@ -270,7 +270,7 @@ export function QuestionBuilder({ examId, initialQuestions, onUpdate }: Question
               <div className="space-y-6 pt-4">
                 <div className="flex items-center justify-between pl-1">
                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Test Case Configuration</label>
-                   <p className="text-[10px] font-bold text-slate-400">Add at least one test case</p>
+                   <p className="text-[10px] font-bold text-blue-500">Format Test Inputs as JSON Arrays (e.g. [5, 10] or ["hello"])</p>
                 </div>
                 
                 <div className="space-y-4">
