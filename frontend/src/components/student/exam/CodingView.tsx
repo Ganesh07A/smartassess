@@ -35,14 +35,12 @@ export function CodingView({
                     <span className="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-xs font-bold rounded uppercase tracking-wide">Points: {question.marks}</span>
                 </div>
                 
-                <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-900 border-b pb-6 border-slate-100">
-                    {question.text}
-                </h2>
+                {/* Question title removed to avoid duplication */}
                 
                 <div className="prose prose-slate max-w-none text-gray-700 leading-relaxed space-y-4">
                     <p className="whitespace-pre-wrap">{question.text}</p>
                     
-                    {question.testCases && question.testCases.length > 0 && (
+                    {!executionResult && question.testCases && question.testCases.length > 0 && (
                         <div className="mt-8 space-y-6">
                             {question.testCases.map((tc: any, idx: number) => (
                                 <div key={idx}>

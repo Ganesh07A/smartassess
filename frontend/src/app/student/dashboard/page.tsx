@@ -62,7 +62,7 @@ export default function StudentDashboard() {
   };
 
   const activeExams = exams.filter(e => 
-    e.status === 'ACTIVE' || e.status === 'PUBLISHED'
+    (e.status === 'ACTIVE' || e.status === 'PUBLISHED') && e.myResult?.status !== 'SUBMITTED' && e.myResult?.status !== 'GRADED'
   );
   const pastExams = exams.filter(e => 
     e.myResult?.status === 'GRADED' || 
@@ -265,11 +265,16 @@ export default function StudentDashboard() {
 // ─── Exam Card ────────────────────────────────
 function ExamCard({ exam }: { exam: StudentExam; isActive?: boolean }) {
   const status = exam.myResult?.status || 'NOT_STARTED';
+  const now = new Date();
+  const startTime = exam.startTime ? new Date(exam.startTime) : null;
+  const isTooEarly = startTime && now < startTime;
+  const isFinished = status === 'SUBMITTED' || status === 'GRADED';
+  const isDisabled = isTooEarly || isFinished;
 
   return (
-    <div className="group bg-white rounded-[2rem] p-8 border border-slate-100 
-                    hover:shadow-2xl hover:shadow-blue-100/50 transition-all 
-                    relative overflow-hidden flex flex-col">
+    <div className={`group bg-white rounded-[2rem] p-8 border border-slate-100 
+                    ${isDisabled ? 'opacity-80' : 'hover:shadow-2xl hover:shadow-blue-100/50'} transition-all 
+                    relative overflow-hidden flex flex-col`}>
       <div className="flex items-center justify-between mb-6">
         <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl 
                         group-hover:bg-blue-600 group-hover:text-white 
@@ -278,10 +283,9 @@ function ExamCard({ exam }: { exam: StudentExam; isActive?: boolean }) {
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 
                         text-blue-600 rounded-full">
-          <span className="w-1.5 h-1.5 bg-blue-600 rounded-full 
-                           animate-pulse" />
-          <span className="text-[10px] font-black uppercase tracking-tight">
-            Active Now
+          <span className={`w-1.5 h-1.5 rounded-full ${isDisabled ? 'bg-orange-500' : 'bg-blue-600 animate-pulse'}`} />
+          <span className={`text-[10px] font-black uppercase tracking-tight ${isDisabled ? 'text-orange-600' : 'text-blue-600'}`}>
+            {isFinished ? 'Completed' : isTooEarly ? 'Upcoming' : 'Active Now'}
           </span>
         </div>
       </div>
@@ -308,16 +312,27 @@ function ExamCard({ exam }: { exam: StudentExam; isActive?: boolean }) {
           </div>
         </div>
 
-        <Link
-          href={`/student/exams/${exam.id}/attempt`}
-          className="w-full py-4 bg-blue-600 text-white text-sm font-black 
-                     rounded-2xl flex items-center justify-center gap-2 
-                     hover:bg-blue-700 shadow-lg shadow-blue-100 
-                     transition-all active:scale-[0.98]"
-        >
-          {status === 'IN_PROGRESS' ? 'Resume Attempt' : 'Start Assessment'}
-          <ChevronRight className="w-4 h-4" />
-        </Link>
+        {isDisabled ? (
+            <button
+                disabled
+                className="w-full py-4 bg-gray-100 text-gray-400 text-sm font-black 
+                        rounded-2xl flex items-center justify-center gap-2 
+                        transition-all"
+            >
+                {isFinished ? 'Already Submitted' : 'Starts ' + (exam.startTime ? new Date(exam.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '')}
+            </button>
+        ) : (
+            <Link
+            href={`/student/exams/${exam.id}/attempt`}
+            className="w-full py-4 bg-blue-600 text-white text-sm font-black 
+                        rounded-2xl flex items-center justify-center gap-2 
+                        hover:bg-blue-700 shadow-lg shadow-blue-100 
+                        transition-all active:scale-[0.98]"
+            >
+            {status === 'IN_PROGRESS' ? 'Resume Attempt' : 'Start Assessment'}
+            <ChevronRight className="w-4 h-4" />
+            </Link>
+        )}
       </div>
     </div>
   );

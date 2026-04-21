@@ -300,7 +300,12 @@ export default function ExamAttemptPage() {
   };
 
   return (
-    <div className={`h-screen bg-background-light flex flex-col font-sans select-none transition-all duration-700 overflow-hidden ${!isFullscreen ? 'filter blur-xl scale-[1.02]' : ''}`}>
+    <div 
+        onCopy={(e) => { e.preventDefault(); toast.error("Copying is disabled."); }}
+        onPaste={(e) => { e.preventDefault(); toast.error("Pasting is disabled."); }}
+        onContextMenu={(e) => { e.preventDefault(); toast.error("Right-click is disabled."); }}
+        className={`h-screen bg-background-light flex flex-col font-sans select-none transition-all duration-700 overflow-hidden ${!isFullscreen ? 'filter blur-xl scale-[1.02]' : ''}`}
+    >
       
       {/* Fullscreen Lock Overlay */}
       {!isFullscreen && isStarted && !isSubmittingRef.current && (

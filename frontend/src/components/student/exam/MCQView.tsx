@@ -26,7 +26,7 @@ export function MCQView({ question, currentAnswer, index, total, onAnswerChange 
         </h2>
         
         <div className="space-y-4">
-            {question.options?.map((opt: any, i: number) => {
+            {question.mcqOptions?.map((opt: any, i: number) => {
                 const isSelected = currentAnswer?.optionId === opt.id;
                 
                 return (
