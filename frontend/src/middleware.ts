@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 const isTeacherRoute = createRouteMatcher(["/teacher(.*)"]);
 const isStudentRoute = createRouteMatcher(["/student(.*)"]);
 const isPublicRoute = createRouteMatcher([
+  "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
 ]);
