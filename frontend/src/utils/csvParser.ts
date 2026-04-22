@@ -12,12 +12,12 @@ export async function parseQuestionsCSV(file: File): Promise<QuestionPayload[]> 
   const headers = rows[0].split(',').map((h) => h.trim().toLowerCase());
   
   const typeIdx = headers.indexOf('type');
-  const marksIdx = headers.indexOf('marks');
+  const marksIdx = headers.findIndex(h => h === 'marks' || h === 'points');
   const diffIdx = headers.indexOf('difficulty');
-  const textIdx = headers.indexOf('questiontext');
+  const textIdx = headers.findIndex(h => h === 'question' || h === 'text' || h === 'questiontext');
 
-  if (typeIdx === -1 || marksIdx === -1 || textIdx === -1) {
-    throw new Error('CSV is missing required headers: Type, Marks, or QuestionText');
+  if (marksIdx === -1 || textIdx === -1) {
+    throw new Error('CSV is missing required headers: Marks/Points or Question/Text');
   }
 
   const parseRow = (line: string) => {
@@ -48,9 +48,8 @@ export async function parseQuestionsCSV(file: File): Promise<QuestionPayload[]> 
   
   for (let i = 1; i < rows.length; i++) {
     const columns = parseRow(rows[i]);
-    const type = (columns[typeIdx] || '').toUpperCase();
-    
-    if (type !== 'MCQ' && type !== 'CODING') continue;
+    const typeVal = typeIdx !== -1 ? (columns[typeIdx] || '').toUpperCase() : 'MCQ';
+    const type = typeVal === 'CODE' || typeVal === 'CODING' ? 'CODING' : 'MCQ';
 
     const payload: QuestionPayload = {
       type: type as 'MCQ' | 'CODING',
@@ -62,14 +61,23 @@ export async function parseQuestionsCSV(file: File): Promise<QuestionPayload[]> 
 
     if (type === 'MCQ') {
       const options: { text: string; isCorrect: boolean }[] = [];
-      // Expected OptionX, OptionXIsCorrect pairs starting after QuestionText
+      const correctAnsIdx = headers.indexOf('correct answer');
+      const correctAnsVal = correctAnsIdx !== -1 ? columns[correctAnsIdx]?.toLowerCase() : null;
+
       for (let j = 1; j <= 4; j++) {
-        const optTextIdx = headers.indexOf(`option${j}`);
+        // Support both "Option1" and "Option A"
+        const optNames = [`option${j}`, `option ${String.fromCharCode(64 + j).toLowerCase()}`];
+        const optTextIdx = headers.findIndex(h => optNames.includes(h));
+        
         const optCorrIdx = headers.indexOf(`option${j}iscorrect`);
+        
         if (optTextIdx !== -1 && columns[optTextIdx]) {
+          const isExplicitlyCorrect = optCorrIdx !== -1 && columns[optCorrIdx]?.toUpperCase() === 'TRUE';
+          const isCorrectByLetter = correctAnsVal === String.fromCharCode(96 + j) || correctAnsVal === `option ${String.fromCharCode(96 + j)}`;
+          
           options.push({
             text: columns[optTextIdx],
-            isCorrect: columns[optCorrIdx]?.toUpperCase() === 'TRUE',
+            isCorrect: isExplicitlyCorrect || isCorrectByLetter,
           });
         }
       }

@@ -129,10 +129,19 @@ export function AssessmentForm({ initial }: AssessmentFormProps) {
         }
       } catch (e) { console.error("Test Case Parse Err", e); }
 
+      // Map Correct Answer (A/B/C/D) to (a/b/c/d) if needed
+      let ans = (row['Correct Answer'] || row.correctAnswer || "a").toString().toLowerCase();
+      if (['a', 'b', 'c', 'd'].includes(ans)) {
+        // already good
+      } else if (ans === 'option a') ans = 'a';
+      else if (ans === 'option b') ans = 'b';
+      else if (ans === 'option c') ans = 'c';
+      else if (ans === 'option d') ans = 'd';
+
       return {
         tempId: crypto.randomUUID(),
         order: questions.length + idx,
-        text: row.Text || row.text || "Imported Question",
+        text: row.Question || row.question || row.Text || row.text || "Imported Question",
         type: type as "MCQ" | "CODE",
         options: {
           a: row['Option A'] || row.optionA || "",
@@ -141,8 +150,8 @@ export function AssessmentForm({ initial }: AssessmentFormProps) {
           d: row['Option D'] || row.optionD || "",
         },
         testCases,
-        correctAnswer: (row['Correct Answer'] || row.correctAnswer || "a").toLowerCase(),
-        points: parseInt(row.Points || row.points || "5"),
+        correctAnswer: ans,
+        points: parseInt(row.Marks || row.marks || row.Points || row.points || "5"),
       };
     });
     setQuestions(prev => [...prev, ...imported]);

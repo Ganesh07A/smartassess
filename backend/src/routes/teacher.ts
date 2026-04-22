@@ -10,6 +10,7 @@ import {
   updateExam,
   deleteExam,
   publishExam,
+  finalizeExam,
   duplicateExam,
   addQuestion,
   addQuestionsBulk,
@@ -47,6 +48,7 @@ router.get('/exams/:id',         getExam);
 router.put('/exams/:id',         updateExam);
 router.delete('/exams/:id',      deleteExam);
 router.post('/exams/:id/publish',   publishExam);
+router.post('/exams/:id/finalize',  finalizeExam);
 router.post('/exams/:id/duplicate', duplicateExam);
 
 // Question Management

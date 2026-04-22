@@ -82,8 +82,8 @@ export const studentApi = {
   getSubmissionResult: (submissionId: string) =>
     api.get<DetailedSubmission>(`/api/student/results/${submissionId}`),
 
-  updateProfile: (payload: { prn: string; year: string; department: string }) =>
-    api.put('/api/auth/profile', payload),
+  completeOnboarding: (payload: { name: string; prn: string; year: string; department: string }) =>
+    api.put('/api/auth/onboarding', payload),
 };
 
 export interface DetailedSubmission {

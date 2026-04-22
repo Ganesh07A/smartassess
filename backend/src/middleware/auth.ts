@@ -64,7 +64,17 @@ export async function resolveUser(req: Request, res: Response, next: NextFunctio
       // 2. Fetch user details from Clerk
       const clerkUser = await clerkClient.users.getUser(userId);
       const email = clerkUser.emailAddresses[0]?.emailAddress || '';
-      const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Unknown';
+      
+      // Smart Name Logic: Full Name > First+Last > Email Prefix > Student
+      let name = '';
+      if (clerkUser.firstName || clerkUser.lastName) {
+        name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
+      } else if (email) {
+        name = email.split('@')[0];
+      } else {
+        name = 'Student';
+      }
+
       const role = (clerkUser.publicMetadata?.role as string || 'STUDENT').toUpperCase() as any;
 
       // 3. Check if a user with this email already exists but lacks a clerkId (or has a different one)
@@ -76,8 +86,8 @@ export async function resolveUser(req: Request, res: Response, next: NextFunctio
           where: { id: existingUserByEmail.id },
           data: {
             clerkId: userId,
-            // Only update name if it was 'Unknown'
-            name: existingUserByEmail.name === 'Unknown' ? name : existingUserByEmail.name,
+            // Only update name if it was 'Unknown' or empty
+            name: (!existingUserByEmail.name || existingUserByEmail.name === 'Unknown') ? name : existingUserByEmail.name,
           }
         });
       } else {

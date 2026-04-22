@@ -161,6 +161,10 @@ export async function deleteExam(req: Request, res: Response, next: NextFunction
 // ───────────────────────────────────────────────
 // POST /api/teacher/exams/:id/publish
 // ───────────────────────────────────────────────
+import { calculateExamAnalytics } from '../../services/reportProcessor';
+
+// ... (other imports)
+
 export async function publishExam(req: Request, res: Response, next: NextFunction) {
   try {
     const teacherId = (req as any).userId;
@@ -180,6 +184,33 @@ export async function publishExam(req: Request, res: Response, next: NextFunctio
     });
 
     return res.json(exam);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ───────────────────────────────────────────────
+// POST /api/teacher/exams/:id/finalize
+// ───────────────────────────────────────────────
+export async function finalizeExam(req: Request, res: Response, next: NextFunction) {
+  try {
+    const teacherId = (req as any).userId;
+    const examId = req.params.id as string;
+
+    const owned = await verifyOwnership(examId, teacherId);
+    if (owned === null) return res.status(404).json({ error: 'Exam not found' });
+    if (owned === false) return res.status(403).json({ error: 'Forbidden' });
+
+    // 1. Close the exam if not already closed
+    await prisma.exam.update({
+      where: { id: examId },
+      data: { status: 'CLOSED' }
+    });
+
+    // 2. Trigger the Analytics Engine (Ranks & Percentiles)
+    await calculateExamAnalytics(examId);
+
+    return res.json({ success: true, message: 'Exam finalized and rankings calculated.' });
   } catch (err) {
     next(err);
   }

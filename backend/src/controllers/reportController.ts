@@ -44,6 +44,8 @@ export async function getStudentReportPDF(req: Request, res: Response, next: Nex
       maxScore: result.maxScore,
       percentage: result.percentage.toFixed(2),
       grade: result.grade || 'N/A',
+      rank: result.rank || 'TBD',
+      percentile: result.percentile !== null ? result.percentile.toFixed(2) : 'TBD',
       status: result.passed ? 'PASSED' : 'FAILED',
       sections: result.sectionResults.map(s => ({
         sectionType: s.sectionType,
@@ -57,6 +59,48 @@ export async function getStudentReportPDF(req: Request, res: Response, next: Nex
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=Report_${result.student.name.replace(/\s+/g, '_')}.pdf`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    return res.send(pdfBuffer);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// 2. Student Basic Slip (PDF)
+export async function getStudentSlipPDF(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { resultId } = req.params;
+    const userId = (req as any).userId;
+
+    const result = await prisma.result.findUnique({
+      where: { id: resultId },
+      include: { student: true, exam: true }
+    });
+
+    if (!result) return res.status(404).json({ error: 'Result not found' });
+    if ((req as any).role === 'STUDENT' && result.studentId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const data = {
+      resultId: result.id.substring(0, 8).toUpperCase(),
+      studentName: result.student.name,
+      studentPRN: result.student.prn || 'N/A',
+      examTitle: result.exam.title,
+      date: result.submittedAt?.toLocaleDateString() || 'N/A',
+      totalScore: result.totalScore,
+      maxScore: result.maxScore,
+      status: result.passed ? 'PASSED' : 'FAILED',
+      statusColor: result.passed ? '#166534' : '#991b1b'
+    };
+
+    const pdfBuffer = await generatePDF('basicSlip', data);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=Slip_${result.student.name.replace(/\s+/g, '_')}.pdf`,
       'Content-Length': pdfBuffer.length,
     });
 

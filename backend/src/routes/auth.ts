@@ -143,24 +143,39 @@ router.post('/set-role', requireAuth, async (req, res) => {
   }
 });
 
-router.put('/profile', requireAuth, async (req, res) => {
-  const { prn, year, department } = req.body;
+router.put('/onboarding', requireAuth, async (req, res) => {
+  const { name, prn, year, department } = req.body;
   const { userId } = (req as any).auth;
 
+  if (!name || !prn || !year || !department) {
+    return res.status(400).json({ error: 'All fields (name, prn, year, department) are required' });
+  }
+
   try {
+    // 1. Update DB
     const user = await prisma.user.update({
       where: { clerkId: userId },
       data: {
-        prn: prn || undefined,
-        year: year || undefined,
-        department: department || undefined,
+        name,
+        prn,
+        year,
+        department,
       },
+    });
+
+    // 2. Sync name back to Clerk if needed
+    const [firstName, ...lastNameParts] = name.split(' ');
+    const lastName = lastNameParts.join(' ');
+    
+    await clerkClient.users.updateUser(userId, {
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
     });
 
     res.json({ success: true, user });
   } catch (err) {
-    console.error('Error updating profile:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
+    console.error('Error during onboarding:', err);
+    res.status(500).json({ error: 'Failed to complete onboarding' });
   }
 });
 

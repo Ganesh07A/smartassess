@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartAssess - Exam Slip</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; color: #1f2937; margin: 0; padding: 30px; display: flex; justify-content: center; }
+        .slip-card { width: 400px; border: 2px dashed #e5e7eb; padding: 25px; border-radius: 12px; position: relative; }
+        .header { text-align: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 15px; margin-bottom: 15px; }
+        .logo { font-size: 18px; font-weight: 800; color: #4f46e5; }
+        .title { font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+        .label { color: #6b7280; }
+        .value { font-weight: 700; color: #111827; }
+        .score-box { background: #f9fafb; padding: 15px; border-radius: 8px; text-align: center; margin-top: 15px; }
+        .score-value { font-size: 24px; font-weight: 800; color: #4f46e5; }
+        .status { margin-top: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .footer { margin-top: 20px; text-align: center; font-size: 9px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="slip-card">
+        <div class="header">
+            <div class="logo">SmartAssess</div>
+            <div class="title">Official Exam Slip</div>
+        </div>
+
+        <div class="info-row">
+            <span class="label">Candidate:</span>
+            <span class="value">{{studentName}}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">PRN:</span>
+            <span class="value">{{studentPRN}}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Assessment:</span>
+            <span class="value">{{examTitle}}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Date:</span>
+            <span class="value">{{date}}</span>
+        </div>
+
+        <div class="score-box">
+            <div class="score-value">{{totalScore}} / {{maxScore}}</div>
+            <div class="status" style="color: {{statusColor}}">{{status}}</div>
+        </div>
+
+        <div class="footer">
+            Verification ID: {{resultId}}<br>
+            Validated by SmartAssess Academic Portal
+        </div>
+    </div>
+</body>
+</html>

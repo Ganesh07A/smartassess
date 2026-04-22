@@ -2,6 +2,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import {
   FileText, Clock, ChevronRight,
@@ -15,12 +16,21 @@ import { ProfileCompletionModal } from '@/components/student/ProfileCompletionMo
 import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const { user } = useUser();
   const [exams, setExams] = useState<StudentExam[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dbUser, setDbUser] = useState<any>(null);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+
+  useEffect(() => {
+    if (!loading && dbUser) {
+      if (!dbUser.prn || !dbUser.year || !dbUser.department || !dbUser.name || dbUser.name === 'Unknown') {
+        router.push('/onboarding');
+      }
+    }
+  }, [loading, dbUser, router]);
 
   const fetchData = async () => {
     try {
@@ -91,13 +101,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc] font-sans">
-      {/* Onboarding Modal */}
-      {!loading && dbUser && (!dbUser.prn || !dbUser.year || !dbUser.department) && (
-        <ProfileCompletionModal 
-          user={dbUser} 
-          onComplete={() => fetchData()} 
-        />
-      )}
 
       {/* Student Sidebar */}
       <StudentSidebar 
