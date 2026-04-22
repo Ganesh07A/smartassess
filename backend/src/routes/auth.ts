@@ -143,4 +143,25 @@ router.post('/set-role', requireAuth, async (req, res) => {
   }
 });
 
+router.put('/profile', requireAuth, async (req, res) => {
+  const { prn, year, department } = req.body;
+  const { userId } = (req as any).auth;
+
+  try {
+    const user = await prisma.user.update({
+      where: { clerkId: userId },
+      data: {
+        prn: prn || undefined,
+        year: year || undefined,
+        department: department || undefined,
+      },
+    });
+
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 export default router;

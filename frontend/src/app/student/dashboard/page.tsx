@@ -11,6 +11,7 @@ import {
 import { studentApi, StudentExam } from '@/lib/api/studentApi';
 import { reportApi } from '@/lib/api/reportApi';
 import { exportStudentHistory, downloadBlob } from '@/lib/exportUtils';
+import { ProfileCompletionModal } from '@/components/student/ProfileCompletionModal';
 import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
@@ -18,21 +19,27 @@ export default function StudentDashboard() {
   const [exams, setExams] = useState<StudentExam[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [performanceData, setPerformanceData] = useState<any>(null);
+  const [dbUser, setDbUser] = useState<any>(null);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [examsRes, performanceRes] = await Promise.all([
+        studentApi.listExams(),
+        studentApi.getPerformance()
+      ]);
+      setExams(examsRes.data);
+      setDbUser(performanceRes.data.student);
+    } catch (err: any) {
+      toast.error(err.displayMessage || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchExams = async () => {
-      try {
-        const res = await studentApi.listExams();
-        setExams(res.data);
-      } catch (err: any) {
-        toast.error(err.displayMessage || 'Failed to load your assessments');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchExams();
+    fetchData();
   }, []);
 
   const handleDownloadPDF = async (resultId: string, examTitle: string) => {
@@ -84,6 +91,14 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex min-h-screen bg-[#f8fafc] font-sans">
+      {/* Onboarding Modal */}
+      {!loading && dbUser && (!dbUser.prn || !dbUser.year || !dbUser.department) && (
+        <ProfileCompletionModal 
+          user={dbUser} 
+          onComplete={() => fetchData()} 
+        />
+      )}
+
       {/* Student Sidebar */}
       <StudentSidebar 
         isOpen={sidebarOpen} 

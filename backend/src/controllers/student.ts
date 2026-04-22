@@ -367,7 +367,7 @@ export async function getStudentPerformanceSelf(req: Request, res: Response, nex
 
     const student = await prisma.user.findUnique({
       where: { id: studentId },
-      select: { name: true, email: true }
+      select: { name: true, email: true, prn: true, year: true, department: true }
     });
 
     return res.json({ student, submissions });
