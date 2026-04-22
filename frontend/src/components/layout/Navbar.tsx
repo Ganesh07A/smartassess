@@ -16,8 +16,8 @@ export function Navbar() {
         </Link>
         
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <Link href="#features" className="text-gray-600 hover:text-black transition">Features</Link>
-          <Link href="#how-it-works" className="text-gray-600 hover:text-black transition">How it Works</Link>
+          <Link href="#FeatureMini" className="text-gray-600 hover:text-black transition">Features</Link>
+          <Link href="#darkshowcase" className="text-gray-600 hover:text-black transition">How it Works</Link>
           
           <div className="flex items-center gap-4">
             {!userId ? (
@@ -34,7 +34,7 @@ export function Navbar() {
                 <Link href="/student">
                   <Button variant="primary" size="sm">Dashboard</Button>
                 </Link>
-                <UserButton afterSignOutUrl="/" />
+                <UserButton />
               </>
             )}
           </div>
