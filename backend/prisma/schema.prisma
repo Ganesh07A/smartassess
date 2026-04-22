@@ -24,6 +24,12 @@ model User {
     examsCreated     Exam[]            @relation("TeacherExams")
     results          Result[]
     examAssignments  ExamAssignment[]
+
+    // Report Fields
+    prn              String?
+    year             String?
+    department       String?
+
     createdAt        DateTime          @default(now())
 
     @@index([clerkId])
@@ -148,9 +154,48 @@ model Result {
   answers        Json?        // Stores student answers as JSON
   performanceLog Json?
   
+  // Analytics Fields
+  grade          String?
+  percentile     Float?
+  rank           Int?
+  timeTaken      Int          @default(0) // In seconds
+  
   submittedAt    DateTime?
   createdAt      DateTime     @default(now())
 
+  // Relations for reporting
+  sectionResults  SectionResult[]
+  questionResults QuestionResult[]
+
   @@index([studentId, examId])
   @@index([examId])
+}
+
+// 10. Section-wise results (Normalized for reports)
+model SectionResult {
+  id          String       @id @default(uuid())
+  resultId    String
+  result      Result       @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  sectionType QuestionType
+  score       Int
+  maxMarks    Int
+  createdAt   DateTime     @default(now())
+
+  @@index([resultId])
+}
+
+// 11. Question-wise results (Normalized for reports)
+model QuestionResult {
+  id             String       @id @default(uuid())
+  resultId       String
+  result         Result       @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  questionId     String
+  type           QuestionType
+  selectedAnswer String?      // For MCQ: optionId, For Coding: code
+  correctAnswer  String?      // Reference for report
+  marks          Int
+  status         String       // CORRECT, INCORRECT, PARTIAL
+  createdAt      DateTime     @default(now())
+
+  @@index([resultId])
 }

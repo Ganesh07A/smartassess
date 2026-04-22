@@ -7,6 +7,7 @@ import { errorHandler } from './src/middleware/errorHandler';
 import authRoutes from './src/routes/auth';
 import teacherRoutes from './src/routes/teacher';
 import studentRoutes from './src/routes/student';
+import reportRoutes from './src/routes/report';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth',    authRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Global error handler
 app.use(errorHandler);

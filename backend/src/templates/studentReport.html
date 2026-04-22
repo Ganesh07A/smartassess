@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartAssess - Performance Report</title>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #1f2937; margin: 0; padding: 40px; line-height: 1.5; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: 800; color: #4f46e5; }
+        .report-title { text-align: right; }
+        .report-title h1 { margin: 0; font-size: 20px; color: #111827; }
+        .report-title p { margin: 5px 0 0; color: #6b7280; font-size: 12px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        .info-section h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 10px; }
+        .info-card { background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .info-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .info-label { color: #6b7280; }
+        .info-value { font-weight: 600; color: #111827; }
+
+        .score-banner { background: #4f46e5; color: white; padding: 30px; border-radius: 12px; display: flex; justify-content: space-around; align-items: center; margin-bottom: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .score-stat { text-align: center; }
+        .score-stat .label { font-size: 12px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px; }
+        .score-stat .value { font-size: 32px; font-weight: 800; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th { text-align: left; background: #f3f4f6; padding: 12px 15px; font-size: 12px; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 12px 15px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+        .status-badge { padding: 4px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+        .status-correct { background: #dcfce7; color: #166534; }
+        .status-incorrect { background: #fee2e2; color: #991b1b; }
+        .status-partial { background: #fef9c3; color: #854d0e; }
+
+        .footer { margin-top: 50px; border-top: 1px solid #e5e7eb; pt: 20px; text-align: center; font-size: 10px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">SmartAssess</div>
+        <div class="report-title">
+            <h1>EXAMINATION REPORT</h1>
+            <p>Generated on {{generatedDate}}</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="info-section">
+            <h2>Candidate Details</h2>
+            <div class="info-card">
+                <div class="info-item"><span class="info-label">Name:</span> <span class="info-value">{{studentName}}</span></div>
+                <div class="info-item"><span class="info-label">Email:</span> <span class="info-value">{{studentEmail}}</span></div>
+                <div class="info-item"><span class="info-label">PRN:</span> <span class="info-value">{{studentPRN}}</span></div>
+                <div class="info-item"><span class="info-label">Dept:</span> <span class="info-value">{{studentDept}}</span></div>
+            </div>
+        </div>
+        <div class="info-section">
+            <h2>Assessment Details</h2>
+            <div class="info-card">
+                <div class="info-item"><span class="info-label">Exam:</span> <span class="info-value">{{examTitle}}</span></div>
+                <div class="info-item"><span class="info-label">Date:</span> <span class="info-value">{{examDate}}</span></div>
+                <div class="info-item"><span class="info-label">Duration:</span> <span class="info-value">{{examDuration}} min</span></div>
+                <div class="info-item"><span class="info-label">Tab Switches:</span> <span class="info-value">{{tabSwitches}}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="score-banner">
+        <div class="score-stat">
+            <div class="label">Total Score</div>
+            <div class="value">{{totalScore}} / {{maxScore}}</div>
+        </div>
+        <div class="score-stat">
+            <div class="label">Percentage</div>
+            <div class="value">{{percentage}}%</div>
+        </div>
+        <div class="score-stat">
+            <div class="label">Grade</div>
+            <div class="value">{{grade}}</div>
+        </div>
+        <div class="score-stat">
+            <div class="label">Result</div>
+            <div class="value">{{status}}</div>
+        </div>
+    </div>
+
+    <h2>Sectional Breakdown</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Section</th>
+                <th>Score Obtained</th>
+                <th>Max Marks</th>
+                <th>Performance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each sections}}
+            <tr>
+                <td>{{sectionType}}</td>
+                <td>{{score}}</td>
+                <td>{{maxMarks}}</td>
+                <td>{{percentage}}%</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        This is a computer-generated report. No signature required. &copy; SmartAssess Intelligence Engine
+    </div>
+</body>
+</html>

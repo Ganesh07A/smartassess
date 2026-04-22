@@ -9,7 +9,8 @@ import {
   BookOpen, Trophy, Activity, History
 } from 'lucide-react';
 import { studentApi, StudentExam } from '@/lib/api/studentApi';
-import { exportStudentHistory } from '@/lib/exportUtils';
+import { reportApi } from '@/lib/api/reportApi';
+import { exportStudentHistory, downloadBlob } from '@/lib/exportUtils';
 import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
@@ -34,9 +35,21 @@ export default function StudentDashboard() {
     fetchExams();
   }, []);
 
+  const handleDownloadPDF = async (resultId: string, examTitle: string) => {
+    const loadingToast = toast.loading(`Generating professional marksheet for ${examTitle}...`);
+    try {
+      const res = await reportApi.downloadStudentPDF(resultId);
+      const filename = `Report_${examTitle.replace(/\s+/g, '_')}.pdf`;
+      downloadBlob(res.data as any, filename);
+      toast.success("Marksheet downloaded!", { id: loadingToast });
+    } catch (error: any) {
+      toast.error(error.displayMessage || "Failed to generate PDF report", { id: loadingToast });
+    }
+  };
+
   const handleDownloadHistory = async () => {
     setIsFetchingHistory(true);
-    const loadingToast = toast.loading("Generating your university-standard report...");
+    const loadingToast = toast.loading("Generating your university-standard history...");
     try {
         const { data } = await studentApi.getPerformance();
         if (!data || !data.submissions || data.submissions.length === 0) {
@@ -53,7 +66,7 @@ export default function StudentDashboard() {
             submissions: data.submissions,
             teacherName: "SmartAssess Academic Portal"
         });
-        toast.success("Professional report downloaded!", { id: loadingToast });
+        toast.success("History report downloaded!", { id: loadingToast });
     } catch (error: any) {
         toast.error(error.displayMessage || "Failed to generate performance report", { id: loadingToast });
     } finally {
@@ -239,15 +252,28 @@ export default function StudentDashboard() {
                           </p>
                         </div>
                       </div>
-                      <Link
-                        href={`/student/exams/${exam.id}/results`}
-                        className="flex items-center gap-2 px-5 py-2.5 
-                                   bg-slate-100 text-slate-900 text-xs 
-                                   font-black rounded-xl hover:bg-slate-200 
-                                   transition-all"
-                      >
-                        View Details <ChevronRight className="w-4 h-4" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {exam.myResult?.id && (
+                          <button
+                            onClick={() => handleDownloadPDF(exam.myResult!.id, exam.title)}
+                            className="flex items-center gap-2 px-5 py-2.5 
+                                       bg-blue-50 text-blue-600 text-xs 
+                                       font-black rounded-xl hover:bg-blue-100 
+                                       transition-all"
+                          >
+                            <FileText className="w-4 h-4" /> Marksheet
+                          </button>
+                        )}
+                        <Link
+                          href={`/student/exams/${exam.id}/results`}
+                          className="flex items-center gap-2 px-5 py-2.5 
+                                     bg-slate-100 text-slate-900 text-xs 
+                                     font-black rounded-xl hover:bg-slate-200 
+                                     transition-all"
+                        >
+                          View Details <ChevronRight className="w-4 h-4" />
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>

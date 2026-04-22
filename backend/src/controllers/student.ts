@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { clerkClient } from '@clerk/express';
 import prisma from '../lib/prisma';
 import { evaluateCodingSubmission } from '../services/judge0';
+import { processResult } from '../services/reportProcessor';
 
 
 async function ensureEligibleExam(examId: string, studentId: string) {
@@ -322,57 +323,25 @@ export async function submitExam(req: Request, res: Response, next: NextFunction
       return res.status(400).json({ error: 'Invalid answers payload' });
     }
 
-    // Grading Logic
-    const exam = await prisma.exam.findUnique({
-      where: { id: req.params.id as string },
-      include: {
-        questions: {
-          include: { mcqOptions: true, testCases: true }
-        }
-      }
-    });
-
-    if (!exam) throw new Error('Exam vanished');
-
-    let totalScoreRaw = 0;
-
-    for (const question of exam.questions) {
-      const studentAnswer = answers[question.id] as Record<string, any> | undefined;
-      if (!studentAnswer || typeof studentAnswer !== 'object') continue;
-
-      if (question.type === 'MCQ') {
-        const correctOpt = question.mcqOptions.find((o: any) => o.isCorrect);
-        if (correctOpt && studentAnswer.optionId === correctOpt.id) {
-          totalScoreRaw += question.marks;
-        }
-      } else if (question.type === 'CODING') {
-        const sourceCode = typeof studentAnswer.code === 'string' ? studentAnswer.code : '';
-        const languageId = studentAnswer.languageId;
-        const evaluation = await evaluateCodingSubmission(sourceCode, question.testCases, languageId);
-        if (evaluation.totalCount > 0) {
-          totalScoreRaw += (evaluation.passedCount / evaluation.totalCount) * question.marks;
-        }
-      }
-    }
-
-    const totalScore = Math.round(totalScoreRaw);
-    const percentage = exam.totalMarks > 0 ? (totalScore / exam.totalMarks) * 100 : 0;
-    const passed = percentage >= exam.passPercent;
-
-    const updatedResult = await prisma.result.update({
+    // Submitting the exam and triggering the Intelligence Layer (Normalization)
+    await prisma.result.update({
       where: { id: activeAttempt.result.id },
       data: {
-        status: 'GRADED',
-        totalScore,
-        percentage,
-        passed,
+        status: 'SUBMITTED',
         answers,
         tabSwitches: tabSwitches || activeAttempt.result.tabSwitches,
         submittedAt: new Date()
       }
     });
 
-    return res.json(updatedResult);
+    // Run the processor to populate normalized tables and calculate final scores/grades
+    const processed = await processResult(activeAttempt.result.id);
+
+    return res.json({ 
+      message: 'Exam submitted successfully',
+      resultId: activeAttempt.result.id,
+      ...processed 
+    });
   } catch (err) {
     next(err);
   }

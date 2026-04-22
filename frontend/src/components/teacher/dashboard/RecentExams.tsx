@@ -7,6 +7,8 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { useState, useRef, useEffect } from 'react';
 import { examApi, Exam } from '@/lib/api/examApi';
+import { reportApi } from '@/lib/api/reportApi';
+import { downloadBlob } from '@/lib/exportUtils';
 import toast from 'react-hot-toast';
 import { useTeacherStats } from '@/hooks/useTeacherStats';  
 
@@ -131,6 +133,26 @@ function ActionMenu({ exam, onDelete, onDuplicate }: {
             <ExternalLink className="w-4 h-4 text-gray-400" />
             Open Exam
           </Link>
+          <button
+            onClick={async () => {
+              const loadingToast = toast.loading(`Generating results for ${exam.title}...`);
+              try {
+                const res = await reportApi.downloadExamExcel(exam.id);
+                downloadBlob(res.data as any, `Results_${exam.title.replace(/\s+/g, '_')}.xlsx`);
+                toast.success("Excel report downloaded!", { id: loadingToast });
+              } catch (err: any) {
+                toast.error(err.displayMessage || "Failed to generate report", { id: loadingToast });
+              }
+              setOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 
+                       text-sm font-semibold text-blue-600 
+                       hover:bg-blue-50 transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            Export Results
+          </button>
+          <div className="h-px bg-gray-100 my-1" />
           <button
             onClick={() => { onDuplicate(exam.id); setOpen(false); }}
             className="w-full flex items-center gap-2.5 px-4 py-2.5 
