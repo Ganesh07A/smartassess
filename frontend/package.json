@@ -15,6 +15,7 @@
     "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^5.2.2",
     "axios": "^1.15.0",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
@@ -28,6 +29,7 @@
     "recharts": "^3.8.1",
     "svix": "^1.90.0",
     "swr": "^2.4.1",
+    "tailwind-merge": "^3.5.0",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
