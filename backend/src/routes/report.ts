@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { getStudentReportPDF, getStudentSlipPDF, getExamReportExcel } from '../controllers/reportController';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, resolveUser } from '../middleware/auth';
 
 const router = Router();
 
-// All report routes require authentication
-router.use(requireAuth);
+// All report routes require authentication and user resolution
+router.use(requireAuth, resolveUser);
 
 // Student Report PDF
 router.get('/student/:resultId/pdf', getStudentReportPDF);
