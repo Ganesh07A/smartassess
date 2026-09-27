@@ -11,8 +11,8 @@ import { generateExcel } from '../lib/excelGenerator';
 // 1. Student Detailed Report (PDF)
 export async function getStudentReportPDF(req: Request, res: Response, next: NextFunction) {
   try {
-    const { resultId } = req.params;
-    const userId = (req as any).userId; // From auth middleware
+    const { resultId } = req.params as { resultId: string };
+    const userId = (req as any).userId;
 
     const result = await prisma.result.findUnique({
       where: { id: resultId },
@@ -71,7 +71,7 @@ export async function getStudentReportPDF(req: Request, res: Response, next: Nex
 // 2. Student Basic Slip (PDF)
 export async function getStudentSlipPDF(req: Request, res: Response, next: NextFunction) {
   try {
-    const { resultId } = req.params;
+    const { resultId } = req.params as { resultId: string };
     const userId = (req as any).userId;
 
     const result = await prisma.result.findUnique({
@@ -110,10 +110,10 @@ export async function getStudentSlipPDF(req: Request, res: Response, next: NextF
   }
 }
 
-// 2. Exam Summary Report (Excel)
+// 3. Exam Summary Report (Excel)
 export async function getExamReportExcel(req: Request, res: Response, next: NextFunction) {
   try {
-    const { examId } = req.params;
+    const { examId } = req.params as { examId: string };
 
     const results = await prisma.result.findMany({
       where: { examId, status: 'GRADED' },

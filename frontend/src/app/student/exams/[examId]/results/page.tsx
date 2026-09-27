@@ -21,6 +21,7 @@ export default function ExamResultsPage() {
   const router = useRouter();
   const { user } = useUser();
   const [exam, setExam] = useState<StudentExam | null>(null);
+  const [detailedSubmission, setDetailedSubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -31,6 +32,9 @@ export default function ExamResultsPage() {
         const found = res.data.find(e => e.id === examId);
         if (found && found.myResult) {
           setExam(found);
+          // Fetch detailed submission for the premium report
+          const detailedRes = await studentApi.getSubmissionResult(found.myResult.id);
+          setDetailedSubmission(detailedRes.data);
         } else {
           toast.error('No result found for this exam');
           router.push('/student/dashboard');
@@ -85,26 +89,84 @@ export default function ExamResultsPage() {
                        <ResultStat label="Status" value={result.passed ? 'PASSED' : 'FAILED'} icon={result.passed ? CheckCircle : XCircle} />
                     </div>
 
-                    <button 
-                      onClick={() => {
-                        if (!exam || !exam.myResult) return;
-                        const loadingToast = toast.loading("Generating official result slip...");
-                        exportResultSlip({
-                            student: { 
-                                name: user?.fullName || 'Student', 
+                    <div className="flex flex-col sm:flex-row gap-4 mt-10">
+                      <button 
+                        onClick={() => {
+                          if (!detailedSubmission) return;
+                          const loadingToast = toast.loading("Generating premium marksheet...");
+                          try {
+                            const { StudentReportGenerator } = require('@/lib/pdf/StudentReportGenerator');
+                            const generator = new StudentReportGenerator();
+                            
+                            // Map DetailedSubmission to DetailedStudentResult
+                            const reportData = {
+                              candidate: {
+                                name: user?.fullName || 'Student',
                                 email: user?.primaryEmailAddress?.emailAddress || 'N/A',
-                                id: user?.id 
-                            },
-                            exam: exam,
-                            result: exam.myResult,
-                            teacherName: (exam as any).teacher?.name // Attempt to get teacher name if provided by backend
-                        });
-                        toast.success("Result slip downloaded!", { id: loadingToast });
-                      }}
-                      className="mt-10 flex items-center gap-2 px-8 py-4 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl text-sm font-black hover:bg-white/30 transition-all active:scale-[0.98]"
-                    >
-                       <Download className="w-5 h-5" /> Download Formal Result
-                    </button>
+                                prn: (user?.publicMetadata?.prn as string) || 'N/A',
+                              },
+                              assessment: {
+                                name: detailedSubmission.exam.title,
+                                date: new Date(detailedSubmission.submittedAt).toLocaleDateString(),
+                                duration: `${detailedSubmission.exam.duration} Minutes`,
+                              },
+                              metrics: {
+                                totalScore: detailedSubmission.totalScore,
+                                maxScore: detailedSubmission.maxScore,
+                                percentile: 85, // Placeholder for actual percentile
+                                integrityIndex: 100 - (detailedSubmission.tabSwitches * 5),
+                              },
+                              questions: detailedSubmission.exam.questions.map((q: any) => {
+                                const studentAnswer = detailedSubmission.answers[q.id];
+                                // Basic scoring logic or use backend marks if available
+                                const isCorrect = q.mcqOptions?.find((o: any) => o.isCorrect)?.text === studentAnswer;
+                                
+                                return {
+                                  questionId: q.id.slice(-4).toUpperCase(),
+                                  questionText: q.text,
+                                  studentAnswer: typeof studentAnswer === 'string' ? studentAnswer : JSON.stringify(studentAnswer),
+                                  correctAnswer: q.mcqOptions?.find((o: any) => o.isCorrect)?.text || 'N/A',
+                                  marksObtained: isCorrect ? q.marks : 0,
+                                  maxMarks: q.marks,
+                                  status: isCorrect ? 'CORRECT' : (studentAnswer ? 'INCORRECT' : 'SKIPPED'),
+                                  isCoding: q.type === 'CODING',
+                                };
+                              })
+                            };
+
+                            generator.downloadStudentReport(reportData, `Marksheet_${detailedSubmission.exam.title}.pdf`);
+                            toast.success("Premium marksheet downloaded!", { id: loadingToast });
+                          } catch (error) {
+                            console.error(error);
+                            toast.error("Failed to generate premium report", { id: loadingToast });
+                          }
+                        }}
+                        className="flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-2xl text-sm font-black hover:bg-black transition-all active:scale-[0.98] shadow-lg"
+                      >
+                         <Trophy className="w-5 h-5 text-emerald-400" /> Download Premium Marksheet
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          if (!exam || !exam.myResult) return;
+                          const loadingToast = toast.loading("Generating official result slip...");
+                          exportResultSlip({
+                              student: { 
+                                  name: user?.fullName || 'Student', 
+                                  email: user?.primaryEmailAddress?.emailAddress || 'N/A',
+                                  id: user?.id 
+                              },
+                              exam: exam,
+                              result: exam.myResult,
+                              teacherName: (exam as any).teacher?.name
+                          });
+                          toast.success("Result slip downloaded!", { id: loadingToast });
+                        }}
+                        className="flex items-center gap-2 px-8 py-4 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl text-sm font-black hover:bg-white/30 transition-all active:scale-[0.98]"
+                      >
+                         <Download className="w-5 h-5" /> Formal Result
+                      </button>
+                    </div>
                  </div>
                  
                  {/* Decorative background circle */}

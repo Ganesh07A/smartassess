@@ -86,7 +86,61 @@ export default function ExamReviewPage() {
                         <MiniStat label="Percentage" value={`${Math.round(submission.percentage)}%`} icon={Target} />
                         <MiniStat label="Pass Grade" value={`${exam.passPercent}%`} icon={Award} />
                         <MiniStat label="Integrity" value={submission.tabSwitches > 3 ? 'LOW' : 'HIGH'} icon={Shield} color={submission.tabSwitches > 3 ? 'text-rose-500' : 'text-blue-600'} />
-                        <div className="flex flex-col items-center justify-center p-4">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full">
+                            <button 
+                                onClick={() => {
+                                    if (!submission) return;
+                                    const loadingToast = toast.loading("Generating premium marksheet...");
+                                    try {
+                                      const { StudentReportGenerator } = require('@/lib/pdf/StudentReportGenerator');
+                                      const generator = new StudentReportGenerator();
+                                      
+                                      const reportData = {
+                                        candidate: {
+                                          name: user?.fullName || 'Student',
+                                          email: user?.primaryEmailAddress?.emailAddress || 'N/A',
+                                          prn: (user?.publicMetadata?.prn as string) || 'N/A',
+                                        },
+                                        assessment: {
+                                          name: submission.exam.title,
+                                          date: new Date(submission.submittedAt).toLocaleDateString(),
+                                          duration: `${submission.exam.duration} Minutes`,
+                                        },
+                                        metrics: {
+                                          totalScore: submission.totalScore,
+                                          maxScore: submission.maxScore,
+                                          percentile: 85,
+                                          integrityIndex: 100 - (submission.tabSwitches * 5),
+                                        },
+                                        questions: submission.exam.questions.map((q: any) => {
+                                          const studentAnswer = submission.answers[q.id];
+                                          const isCorrect = q.mcqOptions?.find((o: any) => o.isCorrect)?.id === (studentAnswer as any)?.optionId;
+                                          
+                                          return {
+                                            questionId: q.id.slice(-4).toUpperCase(),
+                                            questionText: q.text,
+                                            studentAnswer: typeof studentAnswer === 'string' ? studentAnswer : (studentAnswer as any)?.code || JSON.stringify(studentAnswer),
+                                            correctAnswer: q.mcqOptions?.find((o: any) => o.isCorrect)?.text || 'N/A',
+                                            marksObtained: isCorrect ? q.marks : 0,
+                                            maxMarks: q.marks,
+                                            status: isCorrect ? 'CORRECT' : (studentAnswer ? 'INCORRECT' : 'SKIPPED'),
+                                            isCoding: q.type === 'CODING',
+                                          };
+                                        })
+                                      };
+
+                                      generator.downloadStudentReport(reportData, `Marksheet_${submission.exam.title}.pdf`);
+                                      toast.success("Premium marksheet downloaded!", { id: loadingToast });
+                                    } catch (error) {
+                                      console.error(error);
+                                      toast.error("Failed to generate premium report", { id: loadingToast });
+                                    }
+                                }}
+                                className="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-900 text-white rounded-xl text-[10px] font-black hover:bg-black transition-all uppercase tracking-widest shadow-lg shadow-gray-200"
+                            >
+                                <Trophy className="w-4 h-4 text-emerald-400" /> Premium Marksheet
+                            </button>
+
                             <button 
                                 onClick={() => {
                                     const loadingToast = toast.loading("Generating official transcript...");
@@ -98,9 +152,9 @@ export default function ExamReviewPage() {
                                     });
                                     toast.success("Transcript downloaded!", { id: loadingToast });
                                 }}
-                                className="w-full flex items-center justify-center gap-2 p-3 bg-white text-slate-900 border border-slate-200 rounded-xl text-[10px] font-black hover:bg-slate-50 transition-all uppercase tracking-widest"
+                                className="flex-1 flex items-center justify-center gap-2 p-3 bg-white text-slate-900 border border-slate-200 rounded-xl text-[10px] font-black hover:bg-slate-50 transition-all uppercase tracking-widest"
                             >
-                                <Download className="w-4 h-4" /> Download PDF
+                                <Download className="w-4 h-4" /> Formal Record
                             </button>
                         </div>
                     </div>
